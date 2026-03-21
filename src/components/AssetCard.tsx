@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Play } from "lucide-react"
 
 interface Asset {
     id: number
@@ -13,23 +14,6 @@ interface Asset {
 
 export function AssetCard({ asset }: { asset: Asset }) {
     const [isHovered, setIsHovered] = useState(false)
-    const [hoverTimeout, setHoverTimeout] = useState<any>(null)
-
-    const handleMouseEnter = () => {
-        // 400ms 이상 머물렀을 때만 실제 프리뷰 로드 시작 (실수 호버 방지)
-        const timeout = setTimeout(() => {
-            setIsHovered(true)
-        }, 400)
-        setHoverTimeout(timeout)
-    }
-
-    const handleMouseLeave = () => {
-        if (hoverTimeout) {
-            clearTimeout(hoverTimeout)
-            setHoverTimeout(null)
-        }
-        setIsHovered(false)
-    }
 
     const isYoutube = /youtube\.com|youtu\.be|youtube-nocookie\.com/.test(asset.image)
     const isVideo = /\.(mp4|webm|ogg)$/i.test(asset.image)
@@ -55,51 +39,49 @@ export function AssetCard({ asset }: { asset: Asset }) {
     return (
         <Card 
             className="overflow-hidden flex flex-col group transition-all hover:shadow-md border-border/50 hover:-translate-y-1 duration-200"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
         >
-            <div className="relative w-full aspect-video bg-black overflow-hidden">
-                {/* 기본 썸네일 (호버하지 않았을 때 혹은 비디오가 없을 때) */}
+            <a 
+                href={isYoutube || isVideo ? asset.image : undefined} 
+                target="_blank" 
+                rel="noreferrer"
+                className={`relative w-full aspect-video bg-black overflow-hidden ${isYoutube || isVideo ? 'cursor-pointer' : 'cursor-default'}`}
+                onClick={(e) => {
+                    if (!isYoutube && !isVideo) e.preventDefault();
+                }}
+            >
+                {/* 배경 썸네일 */}
                 <div 
-                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-300"
+                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                     style={thumbnailStyle}
                 />
 
-                {/* 호버 시에만 비디오/유튜브 렌더링 (Lazy Loading & Autoplay Control) */}
-                {isHovered && (
-                    <div className="absolute inset-0 z-20 animate-in fade-in duration-300">
-                        {isYoutube && videoId ? (
-                            <iframe
-                                className="w-full h-full pointer-events-none"
-                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&rel=0`}
-                                title={`${asset.title} Video Preview`}
-                                frameBorder="0"
-                                allow="autoplay; encrypted-media; picture-in-picture"
-                                allowFullScreen
-                                loading="lazy"
-                                referrerPolicy="strict-origin-when-cross-origin"
-                            />
-                        ) : isVideo ? (
-                            <video src={asset.image} autoPlay muted loop playsInline className="w-full h-full object-cover pointer-events-none" />
-                        ) : null}
+                {/* 유튜브/비디오용 재생 오버레이 (iframe 없음) */}
+                {(isYoutube || isVideo) && (
+                    <div className={`absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px] transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className="w-14 h-10 bg-[#FF0000] rounded-xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-200">
+                             <Play className="text-white fill-white" size={20} />
+                        </div>
+                        <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-[10px] text-white font-medium">
+                            클릭하여 영상 보기
+                        </div>
                     </div>
                 )}
 
-                {/* 이미지 일반 렌더링 (유튜브나 비디오가 아닐 때) */}
+                {/* 일반 이미지용 (호버 시 스케일 효과만) */}
                 {!isYoutube && !isVideo && (
                     <img
                         src={asset.image}
                         alt={asset.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => { 
                             e.currentTarget.onerror = null; 
                             e.currentTarget.src = '/Main.png'; 
                         }}
                     />
                 )}
-                
-                <div className="absolute inset-0 z-30 bg-transparent cursor-pointer" />
-            </div>
+            </a>
 
             <CardContent className="p-4 flex flex-col flex-1 gap-2">
                 <Badge variant="secondary" className="w-fit text-xs text-[#0078d4] bg-blue-50 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-50/80 font-medium border-0">
@@ -108,7 +90,12 @@ export function AssetCard({ asset }: { asset: Asset }) {
                 <h3 className="font-semibold text-sm line-clamp-2 leading-tight min-h-[2.5rem]" title={asset.title}>
                     {asset.title}
                 </h3>
-                <p className="text-xs text-muted-foreground mt-auto mb-2">유니티 패키지</p>
+                <div className="flex items-center gap-1.5 mt-auto mb-2">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium border border-border/50">
+                        {isYoutube || isVideo ? "🎬 동영상 프리뷰" : "📸 이미지 에셋"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/60">• 유니티 패키지</span>
+                </div>
 
                 <div className="grid grid-cols-2 gap-2 mt-auto">
                     <a href={driveSearchUrl} target="_blank" rel="noreferrer" className="w-full">
