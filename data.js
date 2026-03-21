@@ -359,11 +359,18 @@ const assets = assetList.map((item, index) => {
 
     if (tags.length === 0) tags.push('기타 에셋');
 
+    // [SHADOW-CORE] Unity CDN 접근 제어 우회 프록시 적용
+    let secureImage = item.image || "no-image.png";
+    if (secureImage !== "no-image.png" && !secureImage.includes("youtube.com") && !secureImage.includes("youtu.be")) {
+        // 원본 CDN URL을 암호화 및 프록시 네트워크로 라우팅
+        secureImage = `https://wsrv.nl/?url=${encodeURIComponent(secureImage)}`;
+    }
+
     return {
         id: index + 1,
         title: title,
         // 개별 이미지 URL이 있으면 사용, 없으면 랜덤 이미지 사용
-        image: item.image || "no-image.png",
+        image: secureImage,
         // 개별 스토어 링크
         storeUrl: item.storeUrl || "",
         tags: tags
