@@ -4,9 +4,9 @@ import { neon } from "@neondatabase/serverless";
 export const handler: Handler = async (event) => {
     const clientIp = event.headers["x-nf-client-connection-ip"] || event.headers["client-ip"] || "unknown";
 
-    // 엄격한 IP 검증 (관리자 IP) - Vercel/Netlify 로컬호스트 (::1 등) 허용(개발 시 테스트용)
-    if (clientIp !== "218.55.137.10" && clientIp !== "::1" && clientIp !== "127.0.0.1") {
-        return { statusCode: 403, body: JSON.stringify({ error: "접근 권한이 없습니다." }) };
+    // [SHADOW-OPS] 철통 보안: 지정된 최고 관리자 IP(218.55.137.10) 외 접근 절대 불가
+    if (clientIp !== "218.55.137.10") {
+        return { statusCode: 403, body: JSON.stringify({ error: "접근 권한이 없거나 차단된 IP입니다." }) };
     }
 
     const dbUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
