@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ interface Asset {
 }
 
 export function AssetCard({ asset }: { asset: Asset }) {
+    const [isHovered, setIsHovered] = useState(false)
     const isYoutube = /youtube\.com|youtu\.be|youtube-nocookie\.com/.test(asset.image)
     const isVideo = /\.(mp4|webm|ogg)$/i.test(asset.image)
 
@@ -26,39 +28,59 @@ export function AssetCard({ asset }: { asset: Asset }) {
     const driveSearchUrl = `https://drive.google.com/drive/search?q=${searchQuery}`
     const storeUrl = asset.storeUrl || `https://assetstore.unity.com/?q=${encodeURIComponent(asset.title)}`
 
+    // 썸네일 배경 스타일
+    const thumbnailStyle = isYoutube && videoId 
+        ? { backgroundImage: `url('https://img.youtube.com/vi/${videoId}/maxresdefault.jpg'), url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')` }
+        : isVideo 
+        ? { backgroundColor: '#000' } // 비디오는 썸네일이 따로 없으면 검은색 (필요시 커버 이미지 추가 가능)
+        : { backgroundImage: `url(${asset.image})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+
     return (
-        <Card className="overflow-hidden flex flex-col group transition-all hover:shadow-md border-border/50 hover:-translate-y-1 duration-200">
+        <Card 
+            className="overflow-hidden flex flex-col group transition-all hover:shadow-md border-border/50 hover:-translate-y-1 duration-200"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
             <div className="relative w-full aspect-video bg-black overflow-hidden">
-                {isYoutube && videoId ? (
-                    <div
-                        className="w-full h-full bg-cover bg-center flex items-center justify-center relative"
-                        style={{ backgroundImage: `url('https://img.youtube.com/vi/${videoId}/maxresdefault.jpg'), url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')` }}
-                    >
-                        <iframe
-                            className="w-full h-full pointer-events-none absolute inset-0"
-                            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${origin}`}
-                            title={`${asset.title} Video Preview`}
-                            frameBorder="0"
-                            allow="autoplay; encrypted-media"
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                        />
+                {/* 기본 썸네일 (호버하지 않았을 때 혹은 비디오가 없을 때) */}
+                <div 
+                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-300"
+                    style={thumbnailStyle}
+                />
+
+                {/* 호버 시에만 비디오/유튜브 렌더링 (Lazy Loading & Autoplay Control) */}
+                {isHovered && (
+                    <div className="absolute inset-0 z-20 animate-in fade-in duration-300">
+                        {isYoutube && videoId ? (
+                            <iframe
+                                className="w-full h-full pointer-events-none"
+                                src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${origin}`}
+                                title={`${asset.title} Video Preview`}
+                                frameBorder="0"
+                                allow="autoplay; encrypted-media"
+                                allowFullScreen
+                                loading="lazy"
+                            />
+                        ) : isVideo ? (
+                            <video src={asset.image} autoPlay muted loop playsInline className="w-full h-full object-cover pointer-events-none" />
+                        ) : null}
                     </div>
-                ) : isVideo ? (
-                    <video src={asset.image} autoPlay muted loop playsInline className="w-full h-full object-cover pointer-events-none" />
-                ) : (
+                )}
+
+                {/* 이미지 일반 렌더링 (유튜브나 비디오가 아닐 때) */}
+                {!isYoutube && !isVideo && (
                     <img
                         src={asset.image}
                         alt={asset.title}
                         className="w-full h-full object-cover"
                         onError={(e) => { 
                             e.currentTarget.onerror = null; 
-                            e.currentTarget.src = '/Main.png'; // no-image.png가 없으므로 임시로 Main.png 사용 또는 빈 이미지
+                            e.currentTarget.src = '/Main.png'; 
                         }}
                     />
                 )}
-                <div className="absolute inset-0 z-10 bg-transparent cursor-pointer" />
+                
+                <div className="absolute inset-0 z-30 bg-transparent cursor-pointer" />
             </div>
 
             <CardContent className="p-4 flex flex-col flex-1 gap-2">
