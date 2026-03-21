@@ -22,7 +22,6 @@ export function AssetCard({ asset }: { asset: Asset }) {
         if (match) videoId = match[1]
     }
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const tagText = asset.tags?.length ? asset.tags.join(', ') : '패키지'
     const searchQuery = encodeURIComponent(`${asset.title}.unitypackage`)
     const driveSearchUrl = `https://drive.google.com/drive/search?q=${searchQuery}`
@@ -54,12 +53,13 @@ export function AssetCard({ asset }: { asset: Asset }) {
                         {isYoutube && videoId ? (
                             <iframe
                                 className="w-full h-full pointer-events-none"
-                                src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${origin}`}
+                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&rel=0`}
                                 title={`${asset.title} Video Preview`}
                                 frameBorder="0"
-                                allow="autoplay; encrypted-media"
+                                allow="autoplay; encrypted-media; picture-in-picture"
                                 allowFullScreen
                                 loading="lazy"
+                                referrerPolicy="strict-origin-when-cross-origin"
                             />
                         ) : isVideo ? (
                             <video src={asset.image} autoPlay muted loop playsInline className="w-full h-full object-cover pointer-events-none" />
