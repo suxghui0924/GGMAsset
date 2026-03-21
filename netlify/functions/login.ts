@@ -24,8 +24,40 @@ export const handler: Handler = async (event, context) => {
         }
         const sql = neon(dbUrl);
 
+        // [SHADOW-OPS] 보안 테이블 초기화 및 무차별 대입 방어 체크
+        await sql`CREATE TABLE IF NOT EXISTS login_attempts (ip VARCHAR(255) PRIMARY KEY, attempts INTEGER DEFAULT 0, last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);`;
+        
+        const attemptRows = await sql`SELECT attempts, last_attempt_at FROM login_attempts WHERE ip = ${clientIp}`;
+        if (attemptRows.length > 0) {
+            const { attempts, last_attempt_at } = attemptRows[0];
+            const lastAttempt = new Date(last_attempt_at);
+            const now = new Date();
+            const diffMinutes = (now.getTime() - lastAttempt.getTime()) / (1000 * 60);
+
+            if (attempts >= 5 && diffMinutes < 30) {
+                return { 
+                    statusCode: 429, 
+                    body: JSON.stringify({ 
+                        error: `보안 위험 감지: 로그인 시도 횟수 초과. ${Math.ceil(30 - diffMinutes)}분 후 다시 시도해주세요.` 
+                    }) 
+                };
+            }
+
+            // 30분이 지났으면 시도 횟수 초기화 (혹은 아래에서 덮어씌움)
+            if (diffMinutes >= 30) {
+                await sql`DELETE FROM login_attempts WHERE ip = ${clientIp}`;
+            }
+        }
+
         const rows = await sql`SELECT * FROM invite_codes WHERE code = ${code}`;
         if (rows.length === 0) {
+            // 실패 시 기록 누적
+            await sql`
+                INSERT INTO login_attempts (ip, attempts, last_attempt_at) 
+                VALUES (${clientIp}, 1, CURRENT_TIMESTAMP) 
+                ON CONFLICT (ip) 
+                DO UPDATE SET attempts = login_attempts.attempts + 1, last_attempt_at = CURRENT_TIMESTAMP;
+            `;
             return { statusCode: 401, body: JSON.stringify({ error: "유효하지 않은 초대코드입니다." }) };
         }
 
@@ -39,6 +71,9 @@ export const handler: Handler = async (event, context) => {
         if (!invite.locked_ip) {
             await sql`UPDATE invite_codes SET locked_ip = ${clientIp}, is_used = true WHERE code = ${code}`;
         }
+
+        // [SHADOW-OPS] 로그인 성공 시 시도 카운트 초기화
+        await sql`DELETE FROM login_attempts WHERE ip = ${clientIp}`;
 
         // 3월 12일 KST 기준 학년 계산 로직
         const now = new Date();
