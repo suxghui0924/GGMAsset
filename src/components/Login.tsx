@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { AdminPanel } from "./AdminPanel"
 
-export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
+export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, key: string) => void }) {
     const [code, setCode] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -45,8 +45,8 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 throw new Error(data.details || data.error || "일치하는 보안 자격 증명이 없습니다.")
             }
 
-            // 올바른 키일 경우 로그인 성공 처리
-            onLoginSuccess()
+            // 올바른 키일 경우 로그인 성공 처리 (관리자 여부와 키값 전달)
+            onLoginSuccess(data.isAdmin, code.trim())
 
         } catch (err: any) {
             setError(err.message)
@@ -62,8 +62,8 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                     <CardTitle className="text-3xl font-bold tracking-tight mb-2">
                         GGM <span className="text-[#0078d4]">Asset Vault</span>
                     </CardTitle>
-                    <CardDescription className="text-base">
-                        인가된 내부 사용자 전용 프리미엄 에셋 라이브러리
+                    <CardDescription className="text-base text-muted-foreground font-medium">
+                        경기게임마이스터고 에셋 라이브러리
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10">
@@ -71,7 +71,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                         <div>
                             <Input
                                 type="password"
-                                placeholder="발급받은 시크릿 코드를 입력하세요"
+                                placeholder="초대 코드를 입력하세요"
                                 value={code}
                                 onChange={e => setCode(e.target.value)}
                                 className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono"
@@ -109,7 +109,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 </div>
             )}
 
-            {/* 관리자 패널 오버레이 */}
+            {/* 관리자 패널 오버레이 (비로그인 상태 백도어 전용) */}
             {showAdmin && canAccessAdminPanel && (
                 <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
                     <AdminPanel adminKey={code.trim()} onClose={() => setShowAdmin(false)} />

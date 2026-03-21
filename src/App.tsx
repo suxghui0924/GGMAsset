@@ -9,6 +9,9 @@ const CATEGORIES = ["all", "2D", "3D", "VFX", "UI", "Misc"]
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [adminKey, setAdminKey] = useState("")
+
   const [searchQuery, setSearchQuery] = useState("")
   const [currentCategory, setCurrentCategory] = useState("all")
   const [currentSort, setCurrentSort] = useState("name")
@@ -38,12 +41,16 @@ export default function App() {
   }, [searchQuery, currentCategory, currentSort])
 
   if (!isLoggedIn) {
-    return <Login onLoginSuccess={() => setIsLoggedIn(true)} />
+    return <Login onLoginSuccess={(adminStatus, key) => {
+        setIsLoggedIn(true)
+        setIsAdmin(adminStatus)
+        setAdminKey(key)
+    }} />
   }
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans">
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} isAdmin={isAdmin} adminKey={adminKey} />
 
       <main className="container mx-auto px-4 max-w-[1400px] py-8 flex gap-8">
         <Sidebar
