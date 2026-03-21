@@ -63,7 +63,12 @@ export const handler: Handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" } as any,
-            body: JSON.stringify({ success: true, effectiveGrade, lockedIp: clientIp })
+            body: JSON.stringify({ 
+                success: true, 
+                effectiveGrade, 
+                lockedIp: clientIp, 
+                isAdmin: invite.is_admin || code.startsWith("GGM-ADMIN-") 
+            })
         };
     } catch (err: any) {
         console.error("Critical Server Error:", err);

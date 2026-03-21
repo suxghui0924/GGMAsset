@@ -53,42 +53,74 @@ export const handler: Handler = async (event) => {
 
     if (method === "POST") {
         const body = JSON.parse(event.body || "{}");
-        // 코드(code)는 백엔드에서 자동 생성하므로 입력받지 않음
-        const { target_grade, base_year, is_admin } = body;
+        const { target_grade, base_year, is_admin, amount = 1 } = body;
 
         if (target_grade === undefined || !base_year) {
             return { statusCode: 400, body: JSON.stringify({ error: "필수 데이터 누락" }) };
         }
 
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        let finalCode = "";
-        let attempt = 0;
+        const generatedCodes = [];
+        const count = Math.min(Math.max(amount, 1), 100); // 1~100개 제한
 
-        // 절대 중복 방지 (충돌 시 재생성)
-        while (attempt < 10) {
-            let randStr = "";
-            const len = is_admin ? 50 : 20;
-            for (let i = 0; i < len; i++) {
-                randStr += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let j = 0; j < count; j++) {
+            let finalCode = "";
+            let attempt = 0;
+            while (attempt < 10) {
+                let randStr = "";
+                const len = is_admin ? 50 : 20;
+                for (let i = 0; i < len; i++) {
+                    randStr += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                finalCode = is_admin ? `GGM-ADMIN-${randStr}` : `GGM-USER-${randStr}`;
+
+                const check = await sql`SELECT code FROM invite_codes WHERE code = ${finalCode}`;
+                if (check.length === 0) break;
+                attempt++;
             }
-            finalCode = is_admin ? `GGM-ADMIN-${randStr}` : `GGM-USER-${randStr}`;
-
-            const check = await sql`SELECT code FROM invite_codes WHERE code = ${finalCode}`;
-            if (check.length === 0) break; // 중복 없음 확인
-            attempt++;
+            await sql`INSERT INTO invite_codes (code, target_grade, base_year, is_admin) VALUES (${finalCode}, ${target_grade}, ${base_year}, ${is_admin || false})`;
+            generatedCodes.push(finalCode);
         }
 
-        await sql`INSERT INTO invite_codes (code, target_grade, base_year, is_admin) VALUES (${finalCode}, ${target_grade}, ${base_year}, ${is_admin || false})`;
-        return { statusCode: 200, body: JSON.stringify({ success: true, message: "초대코드 생성 완료", generatedCode: finalCode }) };
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: `${count}개 생성 완료`, generatedCodes }) };
+    }
+
+    if (method === "PUT") {
+        const body = JSON.parse(event.body || "{}");
+        const { code, action, payload } = body;
+
+        if (!code || !action) return { statusCode: 400, body: JSON.stringify({ error: "코드 혹은 액션 누락" }) };
+
+        if (action === "reset_ip") {
+            await sql`UPDATE invite_codes SET locked_ip = NULL, is_used = false WHERE code = ${code}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true, message: "IP 락 해제 완료" }) };
+        }
+
+        if (action === "update_grade" && payload) {
+            await sql`UPDATE invite_codes SET target_grade = ${payload.target_grade} WHERE code = ${code}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true, message: "학년 갱신 완료" }) };
+        }
+
+        return { statusCode: 400, body: JSON.stringify({ error: "알 수 없는 액션" }) };
     }
 
     if (method === "DELETE") {
         const body = JSON.parse(event.body || "{}");
-        const { code } = body;
-        if (!code) return { statusCode: 400, body: JSON.stringify({ error: "코드 누락" }) };
+        const { codes } = body; // Array of codes
+        if (!codes || !Array.isArray(codes) || codes.length === 0) {
+            // 하위 호환성 (단일 삭제)
+            if (body.code) {
+                await sql`DELETE FROM invite_codes WHERE code = ${body.code}`;
+                return { statusCode: 200, body: JSON.stringify({ success: true, message: "삭제 완료" }) };
+            }
+            return { statusCode: 400, body: JSON.stringify({ error: "삭제할 코드가 전달되지 않았습니다." }) };
+        }
 
-        await sql`DELETE FROM invite_codes WHERE code = ${code}`;
-        return { statusCode: 200, body: JSON.stringify({ success: true, message: "삭제 완료" }) };
+        // 다중 삭제 루프
+        for (const c of codes) {
+            await sql`DELETE FROM invite_codes WHERE code = ${c}`;
+        }
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: `${codes.length}개 삭제 완료` }) };
     }
 
     return { statusCode: 405, body: "Method Not Allowed" };

@@ -7,10 +7,13 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     const [codes, setCodes] = useState<any[]>([])
     const [targetGrade, setTargetGrade] = useState("1")
     const [baseYear, setBaseYear] = useState(new Date().getFullYear().toString())
-    const [isAdminState, setIsAdminState] = useState(false) // 관리자 권한 부여 여부
+    const [isAdminState, setIsAdminState] = useState(false)
+    const [amount, setAmount] = useState(1) // 재생성할 키 개수
     const [loading, setLoading] = useState(false)
 
-    // API 요청 시 x-admin-key 헤더 탑재
+    // 선택된 키 목록 (일괄 삭제용)
+    const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set())
+
     const getHeaders = () => {
         const headers: Record<string, string> = { "Content-Type": "application/json" }
         if (adminKey) headers["x-admin-key"] = adminKey
@@ -39,35 +42,76 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
             body: JSON.stringify({ 
                 target_grade: parseInt(targetGrade), 
                 base_year: parseInt(baseYear), 
-                is_admin: isAdminState 
+                is_admin: isAdminState,
+                amount: amount
             })
         })
         setLoading(false)
         setIsAdminState(false)
+        setAmount(1)
         fetchCodes()
     }
 
-    const handleDelete = async (codeToDelete: string) => {
-        if (!confirm("정말 이 코드를 삭제하시겠습니까?")) return
+    const handleBulkDelete = async () => {
+        if (selectedCodes.size === 0) return
+        if (!confirm(`선택한 ${selectedCodes.size}개의 키를 정말 삭제하시겠습니까?`)) return
+        
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "DELETE",
             headers: getHeaders(),
-            body: JSON.stringify({ code: codeToDelete })
+            body: JSON.stringify({ codes: Array.from(selectedCodes) })
+        })
+        setSelectedCodes(new Set())
+        fetchCodes()
+    }
+
+    const handleCopy = (code: string) => {
+        navigator.clipboard.writeText(code)
+        alert("복사되었습니다!")
+    }
+
+    const handleResetIp = async (code: string) => {
+        if (!confirm("이 코드의 IP 제한을 초기화하시겠습니까? (다른 기기에서 접속 가능해짐)")) return
+        await fetch("/api/sys-admin-kL9zQw2XP-manage", {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify({ code, action: "reset_ip" })
         })
         fetchCodes()
     }
 
+    const handleGradeChange = async (code: string, newGrade: string) => {
+        await fetch("/api/sys-admin-kL9zQw2XP-manage", {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify({ code, action: "update_grade", payload: { target_grade: parseInt(newGrade) } })
+        })
+        fetchCodes()
+    }
+
+    const toggleSelectAll = (checked: boolean) => {
+        if (checked) setSelectedCodes(new Set(codes.map(c => c.code)))
+        else setSelectedCodes(new Set())
+    }
+
+    const toggleSelect = (code: string, checked: boolean) => {
+        const next = new Set(selectedCodes)
+        if (checked) next.add(code)
+        else next.delete(code)
+        setSelectedCodes(next)
+    }
+
     return (
-        <Card className="w-full max-w-4xl max-h-[85vh] overflow-auto shadow-2xl relative border-destructive">
+        <Card className="w-full max-w-[1000px] max-h-[85vh] overflow-auto shadow-2xl relative border-destructive">
             <Button variant="ghost" className="absolute right-4 top-4" onClick={onClose}>X</Button>
             <CardHeader>
                 <CardTitle className="text-xl text-destructive flex items-center gap-2">
-                    🛡️ SHADOW-CORE Admin Panel
+                    🛡️ 관리자 제어 패널
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner">
-                    <div className="flex-1">
+                <div className="flex flex-wrap gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner">
+                    <div className="flex-1 min-w-[200px]">
                         <label className="text-xs font-medium text-muted-foreground mb-2 block">권한 레벨 지정</label>
                         <label className="flex items-center gap-2 text-sm font-bold bg-background p-3 border rounded cursor-pointer hover:bg-muted/50 transition">
                             <input 
@@ -77,11 +121,11 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                                 onChange={e => setIsAdminState(e.target.checked)} 
                             />
                             <span className={isAdminState ? "text-destructive" : "text-foreground"}>
-                                최고 관리자(SHADOW) 권한 부여
+                                최고 관리자(SHADOW) 권한
                             </span>
                         </label>
                     </div>
-                    <div className="w-24">
+                    <div className="w-20">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">학년</label>
                         <Input type="number" min="1" max="3" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
                     </div>
@@ -89,51 +133,95 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">기준 연도</label>
                         <Input type="number" value={baseYear} onChange={e => setBaseYear(e.target.value)} />
                     </div>
+                    <div className="w-20">
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">발급 개수</label>
+                        <Input type="number" min="1" max="100" value={amount} onChange={e => setAmount(parseInt(e.target.value) || 1)} />
+                    </div>
                     <div className="w-32 pt-5">
-                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold">자동 생성 & 발급</Button>
+                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold">자동 생성</Button>
                     </div>
                 </div>
 
+                <div className="mb-3 flex justify-between items-center px-1">
+                    <span className="text-sm font-medium">총 {codes.length}개의 키존재 ({selectedCodes.size}개 선택됨)</span>
+                    {selectedCodes.size > 0 && (
+                        <Button variant="destructive" size="sm" onClick={handleBulkDelete}>선택 일괄 삭제</Button>
+                    )}
+                </div>
+
                 <div className="border rounded-md overflow-hidden bg-background shadow">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                    <table className="w-full text-sm text-left relative">
+                        <thead className="bg-muted text-muted-foreground text-[11px] uppercase whitespace-nowrap sticky top-0">
                             <tr>
+                                <th className="p-3 w-10 text-center">
+                                    <input 
+                                        type="checkbox" 
+                                        onChange={e => toggleSelectAll(e.target.checked)}
+                                        checked={codes.length > 0 && selectedCodes.size === codes.length}
+                                    />
+                                </th>
                                 <th className="p-3">초대 코드 (발급된 키)</th>
-                                <th className="p-3">권한 / 학년별</th>
+                                <th className="p-3">학년 설정</th>
                                 <th className="p-3">접속 IP 락 (추적)</th>
                                 <th className="p-3">상태</th>
-                                <th className="p-3 w-20 text-center">관리</th>
+                                <th className="p-3 w-28 text-center">도구</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {codes.map(c => (
                                 <tr key={c.code} className="hover:bg-muted/50 transition-colors">
-                                    <td className="p-3 font-mono font-bold tracking-tight">
-                                        {c.is_admin ? <span className="text-destructive">👑 {c.code}</span> : <span className="text-blue-600">{c.code}</span>}
+                                    <td className="p-3 text-center">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedCodes.has(c.code)}
+                                            onChange={e => toggleSelect(c.code, e.target.checked)}
+                                        />
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
-                                        <div className="font-semibold">{c.is_admin ? "최고 관리자" : "일반 학생"}</div>
-                                        <div className="text-[10px] bg-secondary px-1 py-0.5 rounded inline-block mt-1">
-                                            {c.base_year}년입학 / {c.target_grade}학년
+                                    <td className="p-3 font-mono font-bold tracking-tight">
+                                        <div className="flex items-center gap-2">
+                                            {c.is_admin ? <span className="text-destructive truncate max-w-[150px]" title={c.code}>👑 {c.code}</span> : <span className="text-blue-600 truncate max-w-[150px]" title={c.code}>{c.code}</span>}
+                                            <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => handleCopy(c.code)}>복사</Button>
                                         </div>
                                     </td>
-                                    <td className="p-3 font-mono text-xs max-w-[160px] truncate" title={c.locked_ip || "미활성"}>
-                                        {c.locked_ip ? <span className="text-red-500 font-bold">{c.locked_ip}</span> : <span className="text-muted-foreground opacity-50">대기 중</span>}
+                                    <td className="p-3">
+                                        <div className="flex items-center gap-1">
+                                            <select 
+                                                className="border rounded p-1 text-xs" 
+                                                value={c.target_grade} 
+                                                onChange={e => handleGradeChange(c.code, e.target.value)}
+                                            >
+                                                <option value="1">1학년</option>
+                                                <option value="2">2학년</option>
+                                                <option value="3">3학년</option>
+                                            </select>
+                                            <span className="text-[10px] bg-secondary px-1 py-0.5 rounded text-muted-foreground">{c.base_year}년입학</span>
+                                        </div>
+                                    </td>
+                                    <td className="p-3 font-mono text-xs max-w-[150px] truncate" title={c.locked_ip || "미활성"}>
+                                        {c.locked_ip ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-red-500 font-bold">{c.locked_ip}</span>
+                                                <Button variant="outline" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => handleResetIp(c.code)}>초기화</Button>
+                                            </div>
+                                        ) : <span className="text-muted-foreground opacity-50">대기 중</span>}
                                     </td>
                                     <td className="p-3">
                                         {c.is_used ?
-                                            <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-bold border border-green-200">정상 사용됨</span> :
+                                            <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-[10px] font-bold border border-green-200">정상 사용됨</span> :
                                             <span className="text-muted-foreground bg-gray-100 px-2 py-1 rounded-full text-[10px] font-medium">안 씀</span>
                                         }
                                     </td>
                                     <td className="p-3 text-center">
-                                        <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => handleDelete(c.code)}>파기</Button>
+                                        <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
+                                            setSelectedCodes(new Set([c.code]));
+                                            setTimeout(handleBulkDelete, 50); // 선택 후 바로 다중삭제 함수 호출로 단일 삭제 우회
+                                        }}>파기</Button>
                                     </td>
                                 </tr>
                             ))}
                             {codes.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-8 text-center text-muted-foreground">발급된 초대코드가 없습니다.</td>
+                                    <td colSpan={6} className="p-8 text-center text-muted-foreground">발급된 초대코드가 없습니다.</td>
                                 </tr>
                             )}
                         </tbody>

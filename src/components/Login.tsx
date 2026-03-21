@@ -104,7 +104,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
                         onClick={() => setShowAdmin(true)}
                         className="text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors font-bold tracking-widest"
                     >
-                        [ SHADOW-CORE ACCESS ]
+                        [ 관리자 패널 ]
                     </Button>
                 </div>
             )}
