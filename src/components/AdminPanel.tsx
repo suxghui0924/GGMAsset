@@ -102,18 +102,18 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     }
 
     return (
-        <Card className="w-full max-w-[1000px] shadow-2xl relative border-destructive flex flex-col bg-background">
-            <Button variant="ghost" className="absolute right-4 top-4" onClick={onClose}>X</Button>
+        <Card className="w-full max-w-[1000px] shadow-2xl relative border-destructive flex flex-col bg-background max-h-[90vh] overflow-hidden">
+            <Button variant="ghost" className="absolute right-4 top-4 z-50" onClick={onClose}>X</Button>
             <CardHeader className="flex-shrink-0">
                 <CardTitle className="text-xl text-destructive flex items-center gap-2">
                     🛡️ 관리자 제어 패널
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col flex-1 overflow-hidden">
-                <div className="flex flex-wrap gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner flex-shrink-0">
-                    <div className="flex-1 min-w-[200px]">
-                        <label className="text-xs font-medium text-muted-foreground mb-2 block">권한 레벨 지정</label>
-                        <label className="flex items-center gap-2 text-sm font-bold bg-background p-3 border rounded cursor-pointer hover:bg-muted/50 transition">
+            <CardContent className="flex flex-col flex-1 overflow-hidden min-h-0">
+                <div className="flex flex-wrap gap-4 mb-3 p-4 border rounded-md bg-muted/20 items-end shadow-inner flex-shrink-0">
+                    <div className="flex-1 min-w-[180px]">
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">권한 레벨 지정</label>
+                        <label className="flex items-center gap-2 text-sm font-bold bg-background p-2 border rounded cursor-pointer hover:bg-muted/50 transition">
                             <input 
                                 type="checkbox" 
                                 className="w-4 h-4 text-destructive rounded"
@@ -127,29 +127,29 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                     </div>
                     <div className="w-20">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">학년</label>
-                        <Input type="number" min="1" max="3" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
+                        <Input type="number" min="1" max="3" value={targetGrade} className="h-9" onChange={e => setTargetGrade(e.target.value)} />
                     </div>
                     <div className="w-24">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">기준 연도</label>
-                        <Input type="number" value={baseYear} onChange={e => setBaseYear(e.target.value)} />
+                        <Input type="number" value={baseYear} className="h-9" onChange={e => setBaseYear(e.target.value)} />
                     </div>
                     <div className="w-20">
-                        <label className="text-xs font-medium text-muted-foreground mb-1 block">발급 개수</label>
-                        <Input type="number" min="1" max="100" value={amount} onChange={e => setAmount(parseInt(e.target.value) || 1)} />
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">발급 수(개)</label>
+                        <Input type="number" min="1" max="100" value={amount} className="h-9" onChange={e => setAmount(parseInt(e.target.value) || 1)} />
                     </div>
-                    <div className="w-32 pt-5">
-                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold">자동 생성</Button>
+                    <div className="w-28">
+                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold h-9">자동 탑재</Button>
                     </div>
                 </div>
 
-                <div className="mb-3 flex justify-between items-center px-1 flex-shrink-0">
+                <div className="mb-2 flex justify-between items-center px-1 flex-shrink-0">
                     <span className="text-sm font-medium">총 {codes.length}개의 키존재 ({selectedCodes.size}개 선택됨)</span>
                     {selectedCodes.size > 0 && (
                         <Button variant="destructive" size="sm" onClick={handleBulkDelete}>선택 일괄 삭제</Button>
                     )}
                 </div>
 
-                <div className="border rounded-md bg-background shadow flex-1 overflow-y-auto max-h-[50vh] min-h-[200px]">
+                <div className="border rounded-md bg-background shadow flex-1 overflow-y-auto min-h-0">
                     <table className="w-full text-sm text-left relative">
                         <thead className="bg-muted text-muted-foreground text-[11px] uppercase whitespace-nowrap sticky top-0">
                             <tr>
