@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Navbar } from "@/components/Navbar"
 import { Sidebar } from "@/components/Sidebar"
 import { AssetCard } from "@/components/AssetCard"
@@ -36,7 +37,7 @@ export default function App() {
   }, [theme])
 
   const filteredAssets = useMemo(() => {
-    let result = assets.filter((asset) => {
+    const result = assets.filter((asset) => {
       const matchesSearch = asset.title.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesCategory =
         currentCategory === "all" ||
@@ -60,15 +61,20 @@ export default function App() {
   }, [searchQuery, currentCategory, currentSort])
 
   if (!isLoggedIn) {
-    return <Login 
-        theme={theme}
-        onThemeToggle={() => setTheme(t => t === "light" ? "dark" : "light")}
-        onLoginSuccess={(adminStatus, key) => {
-            setIsLoggedIn(true)
-            setIsAdmin(adminStatus)
-            setAdminKey(key)
-        }} 
-    />
+    return (
+      <>
+        <Login 
+          theme={theme}
+          onThemeToggle={() => setTheme(t => t === "light" ? "dark" : "light")}
+          onLoginSuccess={(adminStatus, key) => {
+              setIsLoggedIn(true)
+              setIsAdmin(adminStatus)
+              setAdminKey(key)
+          }} 
+        />
+        <SpeedInsights />
+      </>
+    )
   }
 
   return (
@@ -152,6 +158,8 @@ export default function App() {
           <AdminPanel adminKey={adminKey} onClose={() => setShowAdmin(false)} />
         </div>
       )}
+
+      <SpeedInsights />
     </div>
   )
 }
