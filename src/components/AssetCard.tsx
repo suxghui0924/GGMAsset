@@ -11,15 +11,16 @@ interface Asset {
 }
 
 export function AssetCard({ asset }: { asset: Asset }) {
-    const isYoutube = /youtube\.com|youtu\.be/.test(asset.image)
+    const isYoutube = /youtube\.com|youtu\.be|youtube-nocookie\.com/.test(asset.image)
     const isVideo = /\.(mp4|webm|ogg)$/i.test(asset.image)
 
     let videoId = ""
     if (isYoutube) {
-        const match = asset.image.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
+        const match = asset.image.match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/)
         if (match) videoId = match[1]
     }
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const tagText = asset.tags?.length ? asset.tags.join(', ') : '패키지'
     const searchQuery = encodeURIComponent(`${asset.title}.unitypackage`)
     const driveSearchUrl = `https://drive.google.com/drive/search?q=${searchQuery}`
@@ -30,15 +31,18 @@ export function AssetCard({ asset }: { asset: Asset }) {
             <div className="relative w-full aspect-video bg-black overflow-hidden">
                 {isYoutube && videoId ? (
                     <div
-                        className="w-full h-full bg-cover bg-center flex items-center justify-center"
+                        className="w-full h-full bg-cover bg-center flex items-center justify-center relative"
                         style={{ backgroundImage: `url('https://img.youtube.com/vi/${videoId}/maxresdefault.jpg'), url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')` }}
                     >
                         <iframe
-                            className="w-full h-full pointer-events-none"
-                            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1`}
+                            className="w-full h-full pointer-events-none absolute inset-0"
+                            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&origin=${origin}`}
+                            title={`${asset.title} Video Preview`}
                             frameBorder="0"
                             allow="autoplay; encrypted-media"
                             allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
                         />
                     </div>
                 ) : isVideo ? (
