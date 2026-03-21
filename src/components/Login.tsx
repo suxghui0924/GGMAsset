@@ -3,14 +3,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { AdminPanel } from "./AdminPanel"
+import { Sun, Moon } from "lucide-react"
 
-export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, key: string) => void }) {
+interface LoginProps {
+    onLoginSuccess: (isAdmin: boolean, key: string) => void
+    theme?: "light" | "dark"
+    onThemeToggle?: () => void
+}
+
+export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
     const [code, setCode] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const [isAdminIp, setIsAdminIp] = useState(false)
     const [showAdmin, setShowAdmin] = useState(false)
-
     const [agreed, setAgreed] = useState(false)
 
     // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거)
@@ -62,11 +68,23 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 relative selection:bg-blue-200">
-            <Card className="w-full max-w-md shadow-lg border-border/50">
+        <div className="min-h-screen flex items-center justify-center relative selection:bg-blue-200 overflow-hidden bg-background">
+            {/* 배경 이미지 레이어 */}
+            <div 
+                className="absolute inset-0 z-0 scale-105 transition-transform duration-700 pointer-events-none"
+                style={{ 
+                    backgroundImage: "url('/Main.png')", 
+                    backgroundSize: 'cover', 
+                    backgroundPosition: 'center',
+                    filter: 'blur(20px) brightness(0.7)'
+                }}
+            />
+            <div className="absolute inset-0 z-1 bg-black/20 dark:bg-black/40 backdrop-blur-[2px]" />
+
+            <Card className="w-full max-w-md shadow-2xl border-border/50 z-10 bg-background/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500">
                 <CardHeader className="text-center pb-8 pt-10">
                     <CardTitle className="text-3xl font-bold tracking-tight mb-2">
-                        GGM <span className="text-[#0078d4]">Asset Vault</span>
+                        GGM <span className="text-[#0078d4]">Asset</span>
                     </CardTitle>
                     <CardDescription className="text-base text-muted-foreground font-medium">
                         경기게임마이스터고 에셋 라이브러리
@@ -77,22 +95,22 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
                         <div className="flex flex-col gap-4">
                             <Input
                                 type="password"
-                                placeholder="초대 코드를 입력하세요"
+                                placeholder="보안 코드를 입력하세요"
                                 value={code}
                                 onChange={e => setCode(e.target.value)}
-                                className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono shadow-inner"
+                                className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background/50 focus:bg-background transition-all font-mono shadow-inner border-border/50"
                             />
 
                             <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border border-border/50 transition-all hover:bg-muted/60 group">
-                                <input
-                                    type="checkbox"
+                                <input 
+                                    type="checkbox" 
                                     id="tos"
                                     checked={agreed}
                                     onChange={(e) => setAgreed(e.target.checked)}
                                     className="mt-1 w-4 h-4 rounded border-gray-300 text-[#0078d4] focus:ring-[#0078d4] cursor-pointer"
                                 />
                                 <label htmlFor="tos" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer select-none group-hover:text-foreground/80 transition-colors">
-                                    본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소를 수집</span>하며,
+                                    본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소를 수집</span>하며, 
                                     이는 외부 노출 없이 오직 1기기 1코드 보안 정책(IP Lock) 유지 목적으로만 사용됨에 동의합니다.
                                 </label>
                             </div>
@@ -106,23 +124,35 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
 
                         <Button
                             type="submit"
-                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-1 transition-all shadow-md hover:shadow-lg font-bold"
+                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-1 transition-all shadow-xl hover:shadow-[#0078d4]/20 font-bold"
                             disabled={loading || !code.trim() || !agreed}
                         >
-                            {loading ? "서버 검증 중..." : "로그인"}
+                            {loading ? "보안 검증 중..." : "보안 시스템 접속 로그인"}
                         </Button>
                     </form>
                 </CardContent>
             </Card>
 
+            {/* 왼쪽 하단 테마 토글 */}
+            <div className="absolute bottom-8 left-8 z-20">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={onThemeToggle}
+                    className="rounded-full w-10 h-10 bg-background/50 backdrop-blur shadow-lg border-border/50 hover:bg-background transition-all"
+                >
+                    {theme === "dark" ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5 text-blue-600" />}
+                </Button>
+            </div>
+
             {/* 관리자 전용 히든 백도어 런처 */}
             {canAccessAdminPanel && (
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-in slide-in-from-bottom-5 fade-in duration-500">
+                <div className="absolute bottom-8 right-8 z-20 flex justify-center animate-in slide-in-from-bottom-5 fade-in duration-500">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowAdmin(true)}
-                        className="text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors font-bold tracking-widest"
+                        className="text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors font-bold tracking-widest bg-background/20 backdrop-blur px-4"
                     >
                         [ 관리자 패널 ]
                     </Button>

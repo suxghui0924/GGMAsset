@@ -1,22 +1,24 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { Search, Sun, Moon } from "lucide-react"
 
 interface NavbarProps {
     searchQuery: string
     onSearchChange: (val: string) => void
     isAdmin?: boolean
     adminKey?: string
+    theme?: "light" | "dark"
+    onThemeToggle?: () => void
     onOpenAdmin?: () => void
 }
 
-export function Navbar({ searchQuery, onSearchChange, isAdmin, onOpenAdmin }: NavbarProps) {
+export function Navbar({ searchQuery, onSearchChange, isAdmin, theme, onThemeToggle, onOpenAdmin }: NavbarProps) {
     return (
-        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
             <div className="container flex h-16 items-center justify-between mx-auto px-4 max-w-[1400px]">
                 <div className="flex items-center gap-2">
                     <span className="text-xl font-bold tracking-tight">
-                        GGM <span className="text-[#0078d4]">Asset Vault</span>
+                        GGM <span className="text-[#0078d4]">Asset</span>
                     </span>
                 </div>
 
@@ -25,7 +27,7 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, onOpenAdmin }: Na
                         <Input
                             type="text"
                             placeholder="에셋 검색..."
-                            className="w-full pr-10"
+                            className="w-full pr-10 bg-muted/20 focus:bg-background transition-all"
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                         />
@@ -33,10 +35,19 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, onOpenAdmin }: Na
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onThemeToggle}
+                        className="rounded-full w-9 h-9"
+                    >
+                        {theme === "dark" ? <Sun className="h-4 w-4 text-yellow-500" /> : <Moon className="h-4 w-4 text-blue-600" />}
+                    </Button>
+
                     {isAdmin && (
                         <Button 
-                            className="bg-destructive hover:bg-destructive/90 text-white font-bold tracking-widest shadow shadow-destructive/50"
+                            className="bg-destructive hover:bg-destructive/90 text-white font-bold tracking-widest shadow-lg shadow-destructive/20 h-9 px-4"
                             onClick={onOpenAdmin}
                         >
                             ADMIN PANEL

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Navbar } from "@/components/Navbar"
 import { Sidebar } from "@/components/Sidebar"
 import { AssetCard } from "@/components/AssetCard"
@@ -17,6 +17,23 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("")
   const [currentCategory, setCurrentCategory] = useState("all")
   const [currentSort, setCurrentSort] = useState("name")
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("theme") as "light" | "dark") || "light"
+    }
+    return "light"
+  })
+
+  // 테마 적용 로직
+  useEffect(() => {
+    const root = window.document.documentElement
+    if (theme === "dark") {
+      root.classList.add("dark")
+    } else {
+      root.classList.remove("dark")
+    }
+    localStorage.setItem("theme", theme)
+  }, [theme])
 
   const filteredAssets = useMemo(() => {
     let result = assets.filter((asset) => {
@@ -43,11 +60,15 @@ export default function App() {
   }, [searchQuery, currentCategory, currentSort])
 
   if (!isLoggedIn) {
-    return <Login onLoginSuccess={(adminStatus, key) => {
-        setIsLoggedIn(true)
-        setIsAdmin(adminStatus)
-        setAdminKey(key)
-    }} />
+    return <Login 
+        theme={theme}
+        onThemeToggle={() => setTheme(t => t === "light" ? "dark" : "light")}
+        onLoginSuccess={(adminStatus, key) => {
+            setIsLoggedIn(true)
+            setIsAdmin(adminStatus)
+            setAdminKey(key)
+        }} 
+    />
   }
 
   return (
@@ -57,6 +78,8 @@ export default function App() {
         onSearchChange={setSearchQuery} 
         isAdmin={isAdmin} 
         adminKey={adminKey} 
+        theme={theme}
+        onThemeToggle={() => setTheme(t => t === "light" ? "dark" : "light")}
         onOpenAdmin={() => setShowAdmin(true)} 
       />
 
@@ -120,7 +143,7 @@ export default function App() {
       </main>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground mt-8">
-        <p>GGM Asset Vault © 2026 | 경기게임마이스터고 에셋 저장소</p>
+        <p>GGM Asset © 2026 | 경기게임마이스터고 에셋 저장소</p>
       </footer>
 
       {/* 전역 관리자 패널 오버레이 (최상위 레빌 렌더링으로 위치 오류 방지) */}
