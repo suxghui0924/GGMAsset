@@ -15,6 +15,23 @@ export const handler: Handler = async (event) => {
     }
     const sql = neon(dbUrl);
 
+    // [SHADOW-OPS] 자동 스키마 마이그레이션 (DB 테이블 강제 주입)
+    // - 관리자가 패널에 접근/조작을 시도하는 즉시 누락된 테이블을 자동으로 복구(생성)합니다.
+    try {
+        await sql`
+            CREATE TABLE IF NOT EXISTS invite_codes (
+                code VARCHAR(255) PRIMARY KEY,
+                target_grade INTEGER NOT NULL,
+                base_year INTEGER NOT NULL,
+                locked_ip VARCHAR(255),
+                is_used BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+    } catch (e: any) {
+        console.error("DB Initialization Error:", e);
+    }
+
     const method = event.httpMethod;
 
     if (method === "GET") {
