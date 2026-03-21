@@ -52,7 +52,10 @@ export function AssetCard({ asset }: { asset: Asset }) {
                         src={asset.image}
                         alt={asset.title}
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.currentTarget.src = 'no-image.png' }}
+                        onError={(e) => { 
+                            e.currentTarget.onerror = null; 
+                            e.currentTarget.src = '/Main.png'; // no-image.png가 없으므로 임시로 Main.png 사용 또는 빈 이미지
+                        }}
                     />
                 )}
                 <div className="absolute inset-0 z-10 bg-transparent cursor-pointer" />
