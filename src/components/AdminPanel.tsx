@@ -102,15 +102,15 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     }
 
     return (
-        <Card className="w-full max-w-[1000px] max-h-[85vh] overflow-auto shadow-2xl relative border-destructive">
+        <Card className="w-full max-w-[1000px] shadow-2xl relative border-destructive flex flex-col bg-background">
             <Button variant="ghost" className="absolute right-4 top-4" onClick={onClose}>X</Button>
-            <CardHeader>
+            <CardHeader className="flex-shrink-0">
                 <CardTitle className="text-xl text-destructive flex items-center gap-2">
                     🛡️ 관리자 제어 패널
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="flex flex-wrap gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner">
+            <CardContent className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex flex-wrap gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner flex-shrink-0">
                     <div className="flex-1 min-w-[200px]">
                         <label className="text-xs font-medium text-muted-foreground mb-2 block">권한 레벨 지정</label>
                         <label className="flex items-center gap-2 text-sm font-bold bg-background p-3 border rounded cursor-pointer hover:bg-muted/50 transition">
@@ -142,14 +142,14 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                     </div>
                 </div>
 
-                <div className="mb-3 flex justify-between items-center px-1">
+                <div className="mb-3 flex justify-between items-center px-1 flex-shrink-0">
                     <span className="text-sm font-medium">총 {codes.length}개의 키존재 ({selectedCodes.size}개 선택됨)</span>
                     {selectedCodes.size > 0 && (
                         <Button variant="destructive" size="sm" onClick={handleBulkDelete}>선택 일괄 삭제</Button>
                     )}
                 </div>
 
-                <div className="border rounded-md overflow-hidden bg-background shadow">
+                <div className="border rounded-md bg-background shadow flex-1 overflow-y-auto max-h-[50vh] min-h-[200px]">
                     <table className="w-full text-sm text-left relative">
                         <thead className="bg-muted text-muted-foreground text-[11px] uppercase whitespace-nowrap sticky top-0">
                             <tr>
