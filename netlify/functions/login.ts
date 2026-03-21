@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 
 export const handler: Handler = async (event, context) => {
     if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" }, body: "" };
+        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" } as any, body: "" };
     }
 
     try {
@@ -62,11 +62,11 @@ export const handler: Handler = async (event, context) => {
 
         return {
             statusCode: 200,
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" } as any,
             body: JSON.stringify({ success: true, effectiveGrade, lockedIp: clientIp })
         };
     } catch (err: any) {
-        console.error(err);
-        return { statusCode: 500, body: JSON.stringify({ error: "서버 내부 오류가 발생했습니다." }) };
+        console.error("Critical Server Error:", err);
+        return { statusCode: 500, body: JSON.stringify({ error: "서버 내부 오류가 발생했습니다.", details: err.message || JSON.stringify(err) }) };
     }
 };

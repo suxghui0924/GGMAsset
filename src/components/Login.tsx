@@ -39,7 +39,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             const data = await res.json()
 
             if (!res.ok) {
-                throw new Error(data.error || "알 수 없는 오류가 발생했습니다.")
+                throw new Error(data.details || data.error || "알 수 없는 오류가 발생했습니다.")
             }
 
             // 휘발성 메모리 세션 처리 - 스토리지에 절대 저장하지 않음 (=새로고침시 풀림)
