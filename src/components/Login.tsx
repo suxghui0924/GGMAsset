@@ -11,13 +11,16 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
     const [isAdminIp, setIsAdminIp] = useState(false)
     const [showAdmin, setShowAdmin] = useState(false)
 
+    // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거)
+    const isShadowKey = code.trim().startsWith("GGM-ADMIN-")
+    const canAccessAdminPanel = isAdminIp || isShadowKey
+
     useEffect(() => {
-        // 최초 실행 시 서버로 IP를 물어보고, 관리자 IP인지 체크합니다.
+        // 최초 실행 시 서버로 IP를 물어보고, 최고 관리자 IP 지정 확인
         fetch('/api/ip-check')
             .then(res => res.json())
             .then(data => {
-                // 실제 운영 시엔 218.55.137.10 만 매칭합니다. 개발용 localhost 추가.
-                if (data.ip === "218.55.137.10" || data.ip === "::1" || data.ip === "127.0.0.1") {
+                if (data.ip === "218.55.137.10") {
                     setIsAdminIp(true)
                 }
             })
@@ -39,10 +42,10 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
             const data = await res.json()
 
             if (!res.ok) {
-                throw new Error(data.details || data.error || "알 수 없는 오류가 발생했습니다.")
+                throw new Error(data.details || data.error || "일치하는 보안 자격 증명이 없습니다.")
             }
 
-            // 휘발성 메모리 세션 처리 - 스토리지에 절대 저장하지 않음 (=새로고침시 풀림)
+            // 올바른 키일 경우 로그인 성공 처리
             onLoginSuccess()
 
         } catch (err: any) {
@@ -68,7 +71,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                         <div>
                             <Input
                                 type="password"
-                                placeholder="발급받은 초대 코드를 입력하세요"
+                                placeholder="발급받은 시크릿 코드를 입력하세요"
                                 value={code}
                                 onChange={e => setCode(e.target.value)}
                                 className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono"
@@ -76,14 +79,14 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                         </div>
 
                         {error && (
-                            <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center">
+                            <div className="bg-destructive/10 text-destructive text-sm font-bold p-3 rounded-md text-center border border-destructive/20 border-dashed animate-in fade-in zoom-in-95">
                                 {error}
                             </div>
                         )}
 
                         <Button
                             type="submit"
-                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-2 transition-all shadow-md hover:shadow-lg"
+                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-2 transition-all shadow-md hover:shadow-lg font-bold"
                             disabled={loading || !code.trim()}
                         >
                             {loading ? "보안 검증 중..." : "보안 시스템 접속"}
@@ -92,24 +95,24 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: () => void }) {
                 </CardContent>
             </Card>
 
-            {/* 관리자 IP 전용 히든 패널 런처 */}
-            {isAdminIp && (
-                <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+            {/* 관리자 전용 히든 백도어 런처 */}
+            {canAccessAdminPanel && (
+                <div className="absolute bottom-8 left-0 right-0 flex justify-center animate-in slide-in-from-bottom-5 fade-in duration-500">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowAdmin(true)}
-                        className="text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
+                        className="text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors font-bold tracking-widest"
                     >
-                        System Admin Access
+                        [ SHADOW-CORE ACCESS ]
                     </Button>
                 </div>
             )}
 
             {/* 관리자 패널 오버레이 */}
-            {showAdmin && isAdminIp && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
-                    <AdminPanel onClose={() => setShowAdmin(false)} />
+            {showAdmin && canAccessAdminPanel && (
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
+                    <AdminPanel adminKey={code.trim()} onClose={() => setShowAdmin(false)} />
                 </div>
             )}
         </div>

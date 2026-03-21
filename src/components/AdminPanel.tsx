@@ -3,15 +3,23 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-export function AdminPanel({ onClose }: { onClose: () => void }) {
+export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onClose: () => void }) {
     const [codes, setCodes] = useState<any[]>([])
-    const [newCode, setNewCode] = useState("")
     const [targetGrade, setTargetGrade] = useState("1")
     const [baseYear, setBaseYear] = useState(new Date().getFullYear().toString())
+    const [isAdminState, setIsAdminState] = useState(false) // 관리자 권한 부여 여부
+    const [loading, setLoading] = useState(false)
+
+    // API 요청 시 x-admin-key 헤더 탑재
+    const getHeaders = () => {
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        if (adminKey) headers["x-admin-key"] = adminKey
+        return headers
+    }
 
     const fetchCodes = async () => {
         try {
-            const res = await fetch("/api/sys-admin-kL9zQw2XP-manage")
+            const res = await fetch("/api/sys-admin-kL9zQw2XP-manage", { headers: getHeaders() })
             if (res.ok) {
                 const data = await res.json()
                 if (data.codes) setCodes(data.codes)
@@ -24,13 +32,18 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
     useEffect(() => { fetchCodes() }, [])
 
     const handleCreate = async () => {
-        if (!newCode.trim()) return;
+        setLoading(true)
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code: newCode.trim(), target_grade: parseInt(targetGrade), base_year: parseInt(baseYear) })
+            headers: getHeaders(),
+            body: JSON.stringify({ 
+                target_grade: parseInt(targetGrade), 
+                base_year: parseInt(baseYear), 
+                is_admin: isAdminState 
+            })
         })
-        setNewCode("")
+        setLoading(false)
+        setIsAdminState(false)
         fetchCodes()
     }
 
@@ -38,63 +51,79 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
         if (!confirm("정말 이 코드를 삭제하시겠습니까?")) return
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: getHeaders(),
             body: JSON.stringify({ code: codeToDelete })
         })
         fetchCodes()
     }
 
     return (
-        <Card className="w-full max-w-3xl max-h-[80vh] overflow-auto shadow-2xl relative border-destructive">
+        <Card className="w-full max-w-4xl max-h-[85vh] overflow-auto shadow-2xl relative border-destructive">
             <Button variant="ghost" className="absolute right-4 top-4" onClick={onClose}>X</Button>
             <CardHeader>
-                <CardTitle className="text-xl text-destructive">시스템 관리자 전용 패널</CardTitle>
+                <CardTitle className="text-xl text-destructive flex items-center gap-2">
+                    🛡️ SHADOW-CORE Admin Panel
+                </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex gap-2 mb-6 p-4 border rounded-md bg-muted/30 items-center">
+                <div className="flex gap-4 mb-6 p-5 border rounded-md bg-muted/20 items-end shadow-inner">
                     <div className="flex-1">
-                        <label className="text-xs font-medium text-muted-foreground mb-1 block">초대코드 (예: GGM-NEW-USER)</label>
-                        <Input placeholder="새 초대코드" value={newCode} onChange={e => setNewCode(e.target.value)} />
+                        <label className="text-xs font-medium text-muted-foreground mb-2 block">권한 레벨 지정</label>
+                        <label className="flex items-center gap-2 text-sm font-bold bg-background p-3 border rounded cursor-pointer hover:bg-muted/50 transition">
+                            <input 
+                                type="checkbox" 
+                                className="w-4 h-4 text-destructive rounded"
+                                checked={isAdminState} 
+                                onChange={e => setIsAdminState(e.target.checked)} 
+                            />
+                            <span className={isAdminState ? "text-destructive" : "text-foreground"}>
+                                최고 관리자(SHADOW) 권한 부여
+                            </span>
+                        </label>
                     </div>
                     <div className="w-24">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">학년</label>
-                        <Input type="number" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
+                        <Input type="number" min="1" max="3" value={targetGrade} onChange={e => setTargetGrade(e.target.value)} />
                     </div>
                     <div className="w-24">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">기준 연도</label>
                         <Input type="number" value={baseYear} onChange={e => setBaseYear(e.target.value)} />
                     </div>
-                    <div className="pt-5">
-                        <Button onClick={handleCreate} className="w-full">생성 & 발급</Button>
+                    <div className="w-32 pt-5">
+                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold">자동 생성 & 발급</Button>
                     </div>
                 </div>
 
-                <div className="border rounded-md overflow-hidden bg-background">
+                <div className="border rounded-md overflow-hidden bg-background shadow">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted text-muted-foreground text-xs uppercase">
                             <tr>
-                                <th className="p-3">초대 코드</th>
-                                <th className="p-3">학년정보</th>
-                                <th className="p-3">접속 IP 락</th>
-                                <th className="p-3">사용 여부</th>
+                                <th className="p-3">초대 코드 (발급된 키)</th>
+                                <th className="p-3">권한 / 학년별</th>
+                                <th className="p-3">접속 IP 락 (추적)</th>
+                                <th className="p-3">상태</th>
                                 <th className="p-3 w-20 text-center">관리</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
                             {codes.map(c => (
                                 <tr key={c.code} className="hover:bg-muted/50 transition-colors">
-                                    <td className="p-3 font-mono font-medium">{c.code}</td>
-                                    <td className="p-3 text-muted-foreground">
-                                        {c.target_grade}학년 <br />
-                                        <span className="text-[10px] bg-secondary px-1 py-0.5 rounded">{c.base_year}년 시작</span>
+                                    <td className="p-3 font-mono font-bold tracking-tight">
+                                        {c.is_admin ? <span className="text-destructive">👑 {c.code}</span> : <span className="text-blue-600">{c.code}</span>}
                                     </td>
-                                    <td className="p-3 font-mono text-xs max-w-[150px] truncate" title={c.locked_ip || "미활성"}>
-                                        {c.locked_ip || <span className="text-muted-foreground opacity-50">대기 중</span>}
+                                    <td className="p-3 text-muted-foreground">
+                                        <div className="font-semibold">{c.is_admin ? "최고 관리자" : "일반 학생"}</div>
+                                        <div className="text-[10px] bg-secondary px-1 py-0.5 rounded inline-block mt-1">
+                                            {c.base_year}년입학 / {c.target_grade}학년
+                                        </div>
+                                    </td>
+                                    <td className="p-3 font-mono text-xs max-w-[160px] truncate" title={c.locked_ip || "미활성"}>
+                                        {c.locked_ip ? <span className="text-red-500 font-bold">{c.locked_ip}</span> : <span className="text-muted-foreground opacity-50">대기 중</span>}
                                     </td>
                                     <td className="p-3">
                                         {c.is_used ?
-                                            <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-medium">사용 됨</span> :
-                                            <span className="text-blue-600 bg-blue-50 px-2 py-1 rounded-full text-xs font-medium">안 씀</span>
+                                            <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs font-bold border border-green-200">정상 사용됨</span> :
+                                            <span className="text-muted-foreground bg-gray-100 px-2 py-1 rounded-full text-[10px] font-medium">안 씀</span>
                                         }
                                     </td>
                                     <td className="p-3 text-center">
