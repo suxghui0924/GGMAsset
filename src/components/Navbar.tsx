@@ -1,19 +1,16 @@
-import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
-import { AdminPanel } from "./AdminPanel"
 
 interface NavbarProps {
     searchQuery: string
     onSearchChange: (val: string) => void
     isAdmin?: boolean
     adminKey?: string
+    onOpenAdmin?: () => void
 }
 
-export function Navbar({ searchQuery, onSearchChange, isAdmin, adminKey }: NavbarProps) {
-    const [showAdmin, setShowAdmin] = useState(false)
-
+export function Navbar({ searchQuery, onSearchChange, isAdmin, onOpenAdmin }: NavbarProps) {
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between mx-auto px-4 max-w-[1400px]">
@@ -38,21 +35,12 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, adminKey }: Navba
 
                 <div className="flex items-center gap-4">
                     {isAdmin && (
-                        <>
-                            <Button 
-                                className="bg-destructive hover:bg-destructive/90 text-white font-bold tracking-widest shadow shadow-destructive/50"
-                                onClick={() => setShowAdmin(true)}
-                            >
-                                ADMIN PANEL
-                            </Button>
-                            
-                            {/* 관리자 패널 오버레이 */}
-                            {showAdmin && (
-                                <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center p-4 pt-10 pb-10 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-                                    <AdminPanel adminKey={adminKey} onClose={() => setShowAdmin(false)} />
-                                </div>
-                            )}
-                        </>
+                        <Button 
+                            className="bg-destructive hover:bg-destructive/90 text-white font-bold tracking-widest shadow shadow-destructive/50"
+                            onClick={onOpenAdmin}
+                        >
+                            ADMIN PANEL
+                        </Button>
                     )}
                 </div>
             </div>

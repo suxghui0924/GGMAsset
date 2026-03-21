@@ -3,6 +3,7 @@ import { Navbar } from "@/components/Navbar"
 import { Sidebar } from "@/components/Sidebar"
 import { AssetCard } from "@/components/AssetCard"
 import { Login } from "@/components/Login"
+import { AdminPanel } from "@/components/AdminPanel"
 import { assets } from "@/data"
 
 const CATEGORIES = ["all", "2D", "3D", "VFX", "UI", "Misc"]
@@ -11,6 +12,7 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [adminKey, setAdminKey] = useState("")
+  const [showAdmin, setShowAdmin] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [currentCategory, setCurrentCategory] = useState("all")
@@ -50,7 +52,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans">
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} isAdmin={isAdmin} adminKey={adminKey} />
+      <Navbar 
+        searchQuery={searchQuery} 
+        onSearchChange={setSearchQuery} 
+        isAdmin={isAdmin} 
+        adminKey={adminKey} 
+        onOpenAdmin={() => setShowAdmin(true)} 
+      />
 
       <main className="container mx-auto px-4 max-w-[1400px] py-8 flex gap-8">
         <Sidebar
@@ -114,6 +122,13 @@ export default function App() {
       <footer className="border-t py-8 text-center text-sm text-muted-foreground mt-8">
         <p>GGM Asset Vault © 2026 | 경기게임마이스터고 에셋 저장소</p>
       </footer>
+
+      {/* 전역 관리자 패널 오버레이 (최상위 레빌 렌더링으로 위치 오류 방지) */}
+      {showAdmin && isAdmin && (
+        <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center p-4 pt-10 pb-10 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <AdminPanel adminKey={adminKey} onClose={() => setShowAdmin(false)} />
+        </div>
+      )}
     </div>
   )
 }
