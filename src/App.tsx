@@ -72,7 +72,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] text-foreground font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300">
       <Navbar 
         searchQuery={searchQuery} 
         onSearchChange={setSearchQuery} 

@@ -59,7 +59,7 @@ export function AssetCard({ asset }: { asset: Asset }) {
             </div>
 
             <CardContent className="p-4 flex flex-col flex-1 gap-2">
-                <Badge variant="secondary" className="w-fit text-xs text-[#0078d4] bg-blue-50 hover:bg-blue-50/80 font-medium border-0">
+                <Badge variant="secondary" className="w-fit text-xs text-[#0078d4] bg-blue-50 dark:bg-blue-900/40 dark:text-blue-300 hover:bg-blue-50/80 font-medium border-0">
                     {tagText}
                 </Badge>
                 <h3 className="font-semibold text-sm line-clamp-2 leading-tight min-h-[2.5rem]" title={asset.title}>

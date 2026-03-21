@@ -18,7 +18,7 @@ export function Sidebar({ categories, currentCategory, onSelectCategory }: Sideb
                             className={cn(
                                 "w-full text-left px-3 py-2 text-sm rounded-md transition-colors",
                                 currentCategory === cat
-                                    ? "bg-blue-50 text-[#0078d4] font-medium"
+                                    ? "bg-blue-50 text-[#0078d4] dark:bg-blue-900/30 dark:text-blue-400 font-medium"
                                     : "text-muted-foreground hover:bg-muted"
                             )}
                         >
