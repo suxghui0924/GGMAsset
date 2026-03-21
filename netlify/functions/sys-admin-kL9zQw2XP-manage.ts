@@ -1,0 +1,46 @@
+import { Handler } from "@netlify/functions";
+import { neon } from "@neondatabase/serverless";
+
+export const handler: Handler = async (event) => {
+    const clientIp = event.headers["x-nf-client-connection-ip"] || event.headers["client-ip"] || "unknown";
+
+    // 엄격한 IP 검증 (관리자 IP) - Vercel/Netlify 로컬호스트 (::1 등) 허용(개발 시 테스트용)
+    if (clientIp !== "218.55.137.10" && clientIp !== "::1" && clientIp !== "127.0.0.1") {
+        return { statusCode: 403, body: JSON.stringify({ error: "접근 권한이 없습니다." }) };
+    }
+
+    if (!process.env.DATABASE_URL) {
+        return { statusCode: 500, body: JSON.stringify({ error: "DATABASE_URL 누락" }) };
+    }
+    const sql = neon(process.env.DATABASE_URL);
+
+    const method = event.httpMethod;
+
+    if (method === "GET") {
+        const rows = await sql`SELECT code, target_grade, base_year, locked_ip, is_used, created_at FROM invite_codes ORDER BY created_at DESC`;
+        return { statusCode: 200, body: JSON.stringify({ codes: rows }) };
+    }
+
+    if (method === "POST") {
+        const body = JSON.parse(event.body || "{}");
+        const { code, target_grade, base_year } = body;
+
+        if (!code || target_grade === undefined || !base_year) {
+            return { statusCode: 400, body: JSON.stringify({ error: "필수 데이터 누락" }) };
+        }
+
+        await sql`INSERT INTO invite_codes (code, target_grade, base_year) VALUES (${code}, ${target_grade}, ${base_year})`;
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: "초대코드 생성 완료" }) };
+    }
+
+    if (method === "DELETE") {
+        const body = JSON.parse(event.body || "{}");
+        const { code } = body;
+        if (!code) return { statusCode: 400, body: JSON.stringify({ error: "코드 누락" }) };
+
+        await sql`DELETE FROM invite_codes WHERE code = ${code}`;
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: "삭제 완료" }) };
+    }
+
+    return { statusCode: 405, body: "Method Not Allowed" };
+};
