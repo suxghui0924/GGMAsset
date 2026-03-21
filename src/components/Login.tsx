@@ -11,6 +11,8 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
     const [isAdminIp, setIsAdminIp] = useState(false)
     const [showAdmin, setShowAdmin] = useState(false)
 
+    const [agreed, setAgreed] = useState(false)
+
     // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거)
     const isShadowKey = code.trim().startsWith("GGM-ADMIN-")
     const canAccessAdminPanel = isAdminIp || isShadowKey
@@ -29,6 +31,10 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (!agreed) {
+            setError("이용약관 및 개인정보(IP) 수집에 동의해야 접속 가능합니다.")
+            return
+        }
         setError("")
         setLoading(true)
 
@@ -68,28 +74,42 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
                 </CardHeader>
                 <CardContent className="px-10 pb-10">
                     <form onSubmit={handleLogin} className="flex flex-col gap-5">
-                        <div>
+                        <div className="flex flex-col gap-4">
                             <Input
                                 type="password"
-                                placeholder="초대 코드를 입력하세요"
+                                placeholder="보안 코드를 입력하세요"
                                 value={code}
                                 onChange={e => setCode(e.target.value)}
-                                className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono"
+                                className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono shadow-inner"
                             />
+
+                            <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border border-border/50 transition-all hover:bg-muted/60 group">
+                                <input 
+                                    type="checkbox" 
+                                    id="tos"
+                                    checked={agreed}
+                                    onChange={(e) => setAgreed(e.target.checked)}
+                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-[#0078d4] focus:ring-[#0078d4] cursor-pointer"
+                                />
+                                <label htmlFor="tos" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer select-none group-hover:text-foreground/80 transition-colors">
+                                    본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소를 수집</span>하며, 
+                                    이는 외부 노출 없이 오직 1기기 1코드 보안 정책(IP Lock) 유지 목적으로만 사용됨에 동의합니다.
+                                </label>
+                            </div>
                         </div>
 
                         {error && (
-                            <div className="bg-destructive/10 text-destructive text-sm font-bold p-3 rounded-md text-center border border-destructive/20 border-dashed animate-in fade-in zoom-in-95">
+                            <div className="bg-destructive/10 text-destructive text-sm font-bold p-3 rounded-md text-center border border-destructive/20 border-dashed animate-in fade-in zoom-in-95 leading-snug">
                                 {error}
                             </div>
                         )}
 
                         <Button
                             type="submit"
-                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-2 transition-all shadow-md hover:shadow-lg font-bold"
-                            disabled={loading || !code.trim()}
+                            className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-1 transition-all shadow-md hover:shadow-lg font-bold"
+                            disabled={loading || !code.trim() || !agreed}
                         >
-                            {loading ? "보안 검증 중..." : "보안 시스템 접속"}
+                            {loading ? "보안 검증 중..." : "보안 시스템 접속 로그인"}
                         </Button>
                     </form>
                 </CardContent>
