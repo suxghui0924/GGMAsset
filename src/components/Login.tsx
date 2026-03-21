@@ -77,22 +77,22 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
                         <div className="flex flex-col gap-4">
                             <Input
                                 type="password"
-                                placeholder="보안 코드를 입력하세요"
+                                placeholder="초대 코드를 입력하세요"
                                 value={code}
                                 onChange={e => setCode(e.target.value)}
                                 className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background font-mono shadow-inner"
                             />
 
                             <div className="flex items-start gap-3 p-3 bg-muted/40 rounded-lg border border-border/50 transition-all hover:bg-muted/60 group">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     id="tos"
                                     checked={agreed}
                                     onChange={(e) => setAgreed(e.target.checked)}
                                     className="mt-1 w-4 h-4 rounded border-gray-300 text-[#0078d4] focus:ring-[#0078d4] cursor-pointer"
                                 />
                                 <label htmlFor="tos" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer select-none group-hover:text-foreground/80 transition-colors">
-                                    본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소를 수집</span>하며, 
+                                    본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소를 수집</span>하며,
                                     이는 외부 노출 없이 오직 1기기 1코드 보안 정책(IP Lock) 유지 목적으로만 사용됨에 동의합니다.
                                 </label>
                             </div>
@@ -109,7 +109,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
                             className="w-full bg-[#0078d4] hover:bg-[#005a9e] h-12 text-md mt-1 transition-all shadow-md hover:shadow-lg font-bold"
                             disabled={loading || !code.trim() || !agreed}
                         >
-                            {loading ? "보안 검증 중..." : "보안 시스템 접속 로그인"}
+                            {loading ? "서버 검증 중..." : "로그인"}
                         </Button>
                     </form>
                 </CardContent>
