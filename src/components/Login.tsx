@@ -111,7 +111,7 @@ export function Login({ onLoginSuccess }: { onLoginSuccess: (isAdmin: boolean, k
 
             {/* 관리자 패널 오버레이 (비로그인 상태 백도어 전용) */}
             {showAdmin && canAccessAdminPanel && (
-                <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
+                <div className="fixed inset-0 bg-black/80 z-50 flex items-start justify-center p-4 pt-10 pb-10 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
                     <AdminPanel adminKey={code.trim()} onClose={() => setShowAdmin(false)} />
                 </div>
             )}

@@ -48,7 +48,7 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, adminKey }: Navba
                             
                             {/* 관리자 패널 오버레이 */}
                             {showAdmin && (
-                                <div className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
+                                <div className="fixed inset-0 bg-black/80 z-[100] flex items-start justify-center p-4 pt-10 pb-10 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
                                     <AdminPanel adminKey={adminKey} onClose={() => setShowAdmin(false)} />
                                 </div>
                             )}

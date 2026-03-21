@@ -102,7 +102,7 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     }
 
     return (
-        <Card className="w-full max-w-[1000px] shadow-2xl relative border-destructive flex flex-col bg-background max-h-[90vh] overflow-hidden">
+        <Card className="w-full max-w-[1000px] shadow-2xl relative border-destructive flex flex-col bg-background">
             <Button variant="ghost" className="absolute right-4 top-4 z-50" onClick={onClose}>X</Button>
             <CardHeader className="flex-shrink-0">
                 <CardTitle className="text-xl text-destructive flex items-center gap-2">
