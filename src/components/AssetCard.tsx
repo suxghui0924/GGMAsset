@@ -13,6 +13,24 @@ interface Asset {
 
 export function AssetCard({ asset }: { asset: Asset }) {
     const [isHovered, setIsHovered] = useState(false)
+    const [hoverTimeout, setHoverTimeout] = useState<any>(null)
+
+    const handleMouseEnter = () => {
+        // 400ms 이상 머물렀을 때만 실제 프리뷰 로드 시작 (실수 호버 방지)
+        const timeout = setTimeout(() => {
+            setIsHovered(true)
+        }, 400)
+        setHoverTimeout(timeout)
+    }
+
+    const handleMouseLeave = () => {
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout)
+            setHoverTimeout(null)
+        }
+        setIsHovered(false)
+    }
+
     const isYoutube = /youtube\.com|youtu\.be|youtube-nocookie\.com/.test(asset.image)
     const isVideo = /\.(mp4|webm|ogg)$/i.test(asset.image)
 
@@ -27,18 +45,18 @@ export function AssetCard({ asset }: { asset: Asset }) {
     const driveSearchUrl = `https://drive.google.com/drive/search?q=${searchQuery}`
     const storeUrl = asset.storeUrl || `https://assetstore.unity.com/?q=${encodeURIComponent(asset.title)}`
 
-    // 썸네일 배경 스타일
+    // 썸네일 배경 스타일 (네트워크 최적화를 유지하면서 썸네일은 보이게 함)
     const thumbnailStyle = isYoutube && videoId 
-        ? { backgroundImage: `url('https://img.youtube.com/vi/${videoId}/maxresdefault.jpg'), url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')` }
+        ? { backgroundImage: `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`, backgroundSize: 'cover', backgroundPosition: 'center' }
         : isVideo 
-        ? { backgroundColor: '#000' } // 비디오는 썸네일이 따로 없으면 검은색 (필요시 커버 이미지 추가 가능)
+        ? { backgroundColor: '#000' } 
         : { backgroundImage: `url(${asset.image})`, backgroundSize: 'cover', backgroundPosition: 'center' };
 
     return (
         <Card 
             className="overflow-hidden flex flex-col group transition-all hover:shadow-md border-border/50 hover:-translate-y-1 duration-200"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             <div className="relative w-full aspect-video bg-black overflow-hidden">
                 {/* 기본 썸네일 (호버하지 않았을 때 혹은 비디오가 없을 때) */}
