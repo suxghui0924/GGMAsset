@@ -9,10 +9,11 @@ export const handler: Handler = async (event) => {
         return { statusCode: 403, body: JSON.stringify({ error: "접근 권한이 없습니다." }) };
     }
 
-    if (!process.env.DATABASE_URL) {
+    const dbUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+    if (!dbUrl) {
         return { statusCode: 500, body: JSON.stringify({ error: "DATABASE_URL 누락" }) };
     }
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(dbUrl);
 
     const method = event.httpMethod;
 

@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 
 export const handler: Handler = async (event, context) => {
     if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" } };
+        return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" }, body: "" };
     }
 
     try {
@@ -17,11 +17,12 @@ export const handler: Handler = async (event, context) => {
         // Netlify IP 추출
         const clientIp = event.headers["x-nf-client-connection-ip"] || event.headers["client-ip"] || "unknown";
 
-        if (!process.env.DATABASE_URL) {
+        const dbUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
+        if (!dbUrl) {
             console.error("DATABASE_URL is not set.");
             return { statusCode: 500, body: JSON.stringify({ error: "서버 설정 오류입니다." }) };
         }
-        const sql = neon(process.env.DATABASE_URL);
+        const sql = neon(dbUrl);
 
         const rows = await sql`SELECT * FROM invite_codes WHERE code = ${code}`;
         if (rows.length === 0) {
