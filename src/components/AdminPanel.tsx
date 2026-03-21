@@ -39,9 +39,9 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "POST",
             headers: getHeaders(),
-            body: JSON.stringify({ 
-                target_grade: parseInt(targetGrade), 
-                base_year: parseInt(baseYear), 
+            body: JSON.stringify({
+                target_grade: parseInt(targetGrade),
+                base_year: parseInt(baseYear),
                 is_admin: isAdminState,
                 amount: amount
             })
@@ -55,7 +55,7 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     const handleBulkDelete = async () => {
         if (selectedCodes.size === 0) return
         if (!confirm(`선택한 ${selectedCodes.size}개의 키를 정말 삭제하시겠습니까?`)) return
-        
+
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "DELETE",
             headers: getHeaders(),
@@ -114,14 +114,14 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                     <div className="flex-1 min-w-[180px]">
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">권한 레벨 지정</label>
                         <label className="flex items-center gap-2 text-sm font-bold bg-background p-2 border rounded cursor-pointer hover:bg-muted/50 transition">
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 className="w-4 h-4 text-destructive rounded"
-                                checked={isAdminState} 
-                                onChange={e => setIsAdminState(e.target.checked)} 
+                                checked={isAdminState}
+                                onChange={e => setIsAdminState(e.target.checked)}
                             />
                             <span className={isAdminState ? "text-destructive" : "text-foreground"}>
-                                최고 관리자(SHADOW) 권한
+                                관리자 권한
                             </span>
                         </label>
                     </div>
@@ -138,7 +138,7 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                         <Input type="number" min="1" max="100" value={amount} className="h-9" onChange={e => setAmount(parseInt(e.target.value) || 1)} />
                     </div>
                     <div className="w-28">
-                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold h-9">자동 탑재</Button>
+                        <Button onClick={handleCreate} disabled={loading} className="w-full font-bold h-9">키 발급</Button>
                     </div>
                 </div>
 
@@ -154,8 +154,8 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                         <thead className="bg-muted text-muted-foreground text-[11px] uppercase whitespace-nowrap sticky top-0">
                             <tr>
                                 <th className="p-3 w-10 text-center">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         onChange={e => toggleSelectAll(e.target.checked)}
                                         checked={codes.length > 0 && selectedCodes.size === codes.length}
                                     />
@@ -171,8 +171,8 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                             {codes.map(c => (
                                 <tr key={c.code} className="hover:bg-muted/50 transition-colors">
                                     <td className="p-3 text-center">
-                                        <input 
-                                            type="checkbox" 
+                                        <input
+                                            type="checkbox"
                                             checked={selectedCodes.has(c.code)}
                                             onChange={e => toggleSelect(c.code, e.target.checked)}
                                         />
@@ -185,9 +185,9 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                                     </td>
                                     <td className="p-3">
                                         <div className="flex items-center gap-1">
-                                            <select 
-                                                className="border rounded p-1 text-xs" 
-                                                value={c.target_grade} 
+                                            <select
+                                                className="border rounded p-1 text-xs"
+                                                value={c.target_grade}
                                                 onChange={e => handleGradeChange(c.code, e.target.value)}
                                             >
                                                 <option value="1">1학년</option>
