@@ -102,9 +102,8 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
 
     const typingPlaceholder = useTypingPlaceholder("초대 코드를 입력하세요", 150, 3000)
 
-    // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거)
-    const isShadowKey = code.trim().startsWith("GGM-ADMIN-")
-    const canAccessAdminPanel = isAdminIp || isShadowKey
+    // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거 제거 및 보안 강화)
+    const canAccessAdminPanel = isAdminIp
 
     useEffect(() => {
         // 최초 실행 시 서버로 IP를 물어보고, 최고 관리자 IP 지정 확인
@@ -130,7 +129,7 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!agreed) {
-            setError("이용약관 및 기기 식별정보(Device ID) 수집에 동의해야 접속 가능합니다.")
+            setError("이용약관 및 보안 정보(IP/Device ID) 수집에 동의해야 접속 가능합니다.")
             return
         }
         setError("")
@@ -236,8 +235,8 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
                                         className="mt-1 w-4 h-4 rounded border-gray-300 text-[#0078d4] focus:ring-[#0078d4] cursor-pointer"
                                     />
                                     <label htmlFor="tos" className="text-[11px] text-muted-foreground leading-relaxed cursor-pointer select-none group-hover:text-foreground/80 transition-colors">
-                                        본 시스템 접속 시 기기 식별 및 보안을 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">기기 식별값(Device ID)을 수집</span>하며, 
-                                        이는 외부 노출 없이 오직 1기기 1코드 보안 정책 유지 목적으로만 사용됨에 동의합니다.
+                                        본 시스템 접속 시 서비스 보안과 1기기 1코드 정책 유지를 위해 <span className="text-foreground font-semibold underline decoration-dotted underline-offset-2">접속 IP 주소 및 기기 식별값(Device ID)을 수집</span>하며, 
+                                        수집된 정보는 오직 보안 인증 목적으로만 사용됨에 동의합니다.
                                     </label>
                                 </motion.div>
                             </div>
