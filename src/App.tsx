@@ -5,6 +5,7 @@ import { AssetCard } from "@/components/AssetCard"
 import { Login } from "@/components/Login"
 import { AdminPanel } from "@/components/AdminPanel"
 import { assets } from "@/data"
+import { motion, AnimatePresence } from "framer-motion"
 
 const CATEGORIES = ["all", "2D", "3D", "VFX", "UI", "Misc"]
 
@@ -127,18 +128,35 @@ export default function App() {
             {filteredAssets.length} 개의 결과
           </div>
 
-          {filteredAssets.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-12">
-              {filteredAssets.map((asset) => (
-                <AssetCard key={asset.id} asset={asset} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20 text-muted-foreground">
-              <h2 className="text-xl font-medium mb-2 opacity-80">일치하는 에셋이 없습니다</h2>
-              <p className="text-sm">다른 검색어나 카테고리를 선택해 보세요.</p>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentCategory + searchQuery + currentSort}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {filteredAssets.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-12">
+                  {filteredAssets.map((asset, index) => (
+                    <motion.div
+                      key={asset.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
+                    >
+                      <AssetCard asset={asset} />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 text-muted-foreground">
+                  <h2 className="text-xl font-medium mb-2 opacity-80">일치하는 에셋이 없습니다</h2>
+                  <p className="text-sm">다른 검색어나 카테고리를 선택해 보세요.</p>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 
