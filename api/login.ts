@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return res.status(405).send("Method Not Allowed");
         }
 
-        const { code } = req.body || {};
+        const { code, deviceId } = req.body || {};
         if (!code) return res.status(400).json({ error: "초대코드를 입력해주세요." });
 
         // Vercel standard: x-forwarded-for contains the client IP
@@ -61,12 +61,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         const invite = rows[0];
 
-        if (invite.locked_ip && invite.locked_ip !== clientIp) {
-            return res.status(403).json({ error: "다른 기기(IP)에 종속된 초대코드입니다." });
+        // [SHADOW-OPS] Device ID 기반 락 검증 (IP 대신 강력한 기기 식별)
+        if (invite.locked_device_id && deviceId && invite.locked_device_id !== deviceId) {
+            return res.status(403).json({ error: "다른 기기에 종속된 초대코드입니다. (기기 제한)" });
         }
 
-        if (!invite.locked_ip) {
-            await sql`UPDATE invite_codes SET locked_ip = ${clientIp}, is_used = true WHERE code = ${code}`;
+        // 구 버전 호환성 혹은 추가 보안을 위해 IP 락도 확인 (선택 사항이나 여기서는 Device ID 우선)
+        // if (invite.locked_ip && invite.locked_ip !== clientIp) { ... }
+
+        if (!invite.locked_device_id && deviceId) {
+            await sql`UPDATE invite_codes SET locked_device_id = ${deviceId}, locked_ip = ${clientIp}, is_used = true WHERE code = ${code}`;
+        } else {
+            // 이미 기기가 등록된 경우, IP 정보만 최신화 (모니터링용)
+            await sql`UPDATE invite_codes SET locked_ip = ${clientIp} WHERE code = ${code}`;
         }
 
         // 로그인 성공 시 시도 카운트 초기화

@@ -71,11 +71,11 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
     }
 
     const handleResetIp = async (code: string) => {
-        if (!confirm("이 코드의 IP 제한을 초기화하시겠습니까? (다른 기기에서 접속 가능해짐)")) return
+        if (!confirm("이 코드의 기기 및 IP 제한을 초기화하시겠습니까? (다른 기기에서 접속 가능해짐)")) return
         await fetch("/api/sys-admin-kL9zQw2XP-manage", {
             method: "PUT",
             headers: getHeaders(),
-            body: JSON.stringify({ code, action: "reset_ip" })
+            body: JSON.stringify({ code, action: "reset_lock" })
         })
         fetchCodes()
     }
@@ -162,7 +162,7 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                                 </th>
                                 <th className="p-3">초대 코드 (발급된 키)</th>
                                 <th className="p-3">학년 설정</th>
-                                <th className="p-3">접속 IP 락 (추적)</th>
+                                <th className="p-3">보안 락 (기기/IP)</th>
                                 <th className="p-3">상태</th>
                                 <th className="p-3 w-28 text-center">도구</th>
                             </tr>
@@ -197,11 +197,20 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                                             <span className="text-[10px] bg-secondary px-1 py-0.5 rounded text-muted-foreground">{c.base_year}년입학</span>
                                         </div>
                                     </td>
-                                    <td className="p-3 font-mono text-xs max-w-[150px] truncate" title={c.locked_ip || "미활성"}>
-                                        {c.locked_ip ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-red-500 font-bold">{c.locked_ip}</span>
-                                                <Button variant="outline" size="sm" className="h-5 px-1.5 text-[10px]" onClick={() => handleResetIp(c.code)}>초기화</Button>
+                                    <td className="p-3 font-mono text-[10px] max-w-[200px]" title={`Device ID: ${c.locked_device_id || 'N/A'}\nIP: ${c.locked_ip || 'N/A'}`}>
+                                        {(c.locked_device_id || c.locked_ip) ? (
+                                            <div className="flex flex-col gap-1">
+                                                {c.locked_device_id && (
+                                                    <span className="text-blue-600 font-bold flex items-center gap-1">
+                                                        🖥️ {c.locked_device_id.substring(0, 8)}...
+                                                    </span>
+                                                )}
+                                                {c.locked_ip && (
+                                                    <span className="text-red-500 font-bold flex items-center gap-1">
+                                                        🌐 {c.locked_ip}
+                                                    </span>
+                                                )}
+                                                <Button variant="outline" size="sm" className="h-5 px-1.5 text-[9px] w-fit mt-0.5" onClick={() => handleResetIp(c.code)}>락 해제</Button>
                                             </div>
                                         ) : <span className="text-muted-foreground opacity-50">대기 중</span>}
                                     </td>

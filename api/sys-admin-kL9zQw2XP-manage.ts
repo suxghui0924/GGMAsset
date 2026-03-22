@@ -21,12 +21,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 target_grade INTEGER NOT NULL,
                 base_year INTEGER NOT NULL,
                 locked_ip VARCHAR(255),
+                locked_device_id VARCHAR(255),
                 is_admin BOOLEAN DEFAULT false,
                 is_used BOOLEAN DEFAULT false,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `;
         await sql`ALTER TABLE invite_codes ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;`;
+        await sql`ALTER TABLE invite_codes ADD COLUMN IF NOT EXISTS locked_device_id VARCHAR(255);`;
     } catch (e: any) {
         console.error("DB Initialization Error:", e);
     }
@@ -49,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { method } = req;
 
     if (method === "GET") {
-        const rows = await sql`SELECT code, target_grade, base_year, locked_ip, is_admin, is_used, created_at FROM invite_codes ORDER BY created_at DESC`;
+        const rows = await sql`SELECT code, target_grade, base_year, locked_ip, locked_device_id, is_admin, is_used, created_at FROM invite_codes ORDER BY created_at DESC`;
         return res.status(200).json({ codes: rows });
     }
 
@@ -91,9 +93,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!code || !action) return res.status(400).json({ error: "코드 혹은 액션 누락" });
 
-        if (action === "reset_ip") {
-            await sql`UPDATE invite_codes SET locked_ip = NULL, is_used = false WHERE code = ${code}`;
-            return res.status(200).json({ success: true, message: "IP 락 해제 완료" });
+        if (action === "reset_ip" || action === "reset_lock") {
+            await sql`UPDATE invite_codes SET locked_ip = NULL, locked_device_id = NULL, is_used = false WHERE code = ${code}`;
+            return res.status(200).json({ success: true, message: "기기 및 IP 락 해제 완료" });
         }
 
         if (action === "update_grade" && payload) {
