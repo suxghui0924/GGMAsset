@@ -30,43 +30,57 @@ const TypingText = ({ text }: { text: string }) => {
 }
 
 // 고성능 동적 입력 애니메이션을 위한 미러 컴포넌트
-const AnimatedMirrorInput = ({ value, placeholder }: { value: string, placeholder: string }) => {
+const AnimatedMirrorInput = ({ value, placeholder, isFocused }: { value: string, placeholder: string, isFocused: boolean }) => {
     return (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden px-3">
-            <AnimatePresence mode="popLayout">
-                {value.length === 0 ? (
-                    <motion.span
-                        key="placeholder"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.4 }}
-                        exit={{ opacity: 0 }}
-                        className="text-muted-foreground tracking-normal"
-                    >
-                        {placeholder}
-                    </motion.span>
-                ) : (
-                    <div className="flex items-center tracking-widest font-mono text-lg">
-                        {value.split("").map((char, index) => (
-                            <motion.span
-                                key={`${index}-${char}`}
-                                initial={{ opacity: 0, x: 15, filter: "blur(4px)" }}
-                                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                                exit={{ opacity: 0, x: -15, filter: "blur(4px)" }}
-                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                className="inline-block"
-                            >
-                                •
-                            </motion.span>
-                        ))}
+            <div className="flex items-center tracking-widest font-mono text-lg relative">
+                <AnimatePresence mode="popLayout" initial={false}>
+                    {value.length === 0 ? (
                         <motion.span
-                            layoutId="cursor"
+                            key="placeholder"
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 0.4, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            className="text-muted-foreground tracking-normal absolute left-1/2 -translate-x-1/2 whitespace-nowrap"
+                        >
+                            {placeholder}
+                        </motion.span>
+                    ) : (
+                        <div className="flex items-center">
+                            {value.split("").map((char, index) => (
+                                <motion.span
+                                    key={`${index}-${char}`}
+                                    initial={{ opacity: 0, x: 15, filter: "blur(4px)" }}
+                                    animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                                    exit={{ opacity: 0, x: -15, filter: "blur(4px)" }}
+                                    transition={{ type: "spring", stiffness: 450, damping: 30 }}
+                                    className="inline-block"
+                                >
+                                    •
+                                </motion.span>
+                            ))}
+                        </div>
+                    )}
+                </AnimatePresence>
+                
+                {/* 포커스 시에만 나타나는 역동적인 커서 */}
+                <AnimatePresence>
+                    {isFocused && (
+                        <motion.span
+                            key="active-cursor"
+                            initial={{ opacity: 0 }}
                             animate={{ opacity: [0, 1, 0] }}
-                            transition={{ repeat: Infinity, duration: 0.6 }}
-                            className="w-[2px] h-[1.2em] bg-[#0078d4] ml-1"
+                            exit={{ opacity: 0 }}
+                            transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+                            className="w-[2px] h-[1.2em] bg-[#0078d4] ml-1 shrink-0"
+                            style={{ 
+                                marginLeft: value.length === 0 ? "2px" : "4px",
+                                position: value.length === 0 ? "relative" : "static"
+                            }}
                         />
-                    </div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
     )
 }
@@ -84,6 +98,7 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
     const [isAdminIp, setIsAdminIp] = useState(false)
     const [showAdmin, setShowAdmin] = useState(false)
     const [agreed, setAgreed] = useState(false)
+    const [isFocused, setIsFocused] = useState(false)
 
     const typingPlaceholder = useTypingPlaceholder("초대 코드를 입력하세요", 150, 3000)
 
@@ -177,16 +192,18 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     transition={{ delay: 0.3 }}
-                                    className="relative"
+                                    className="relative group/input"
                                 >
                                     <Input
                                         type="password"
                                         placeholder=""
                                         value={code}
                                         onChange={e => setCode(e.target.value)}
+                                        onFocus={() => setIsFocused(true)}
+                                        onBlur={() => setIsFocused(false)}
                                         className="h-12 text-center text-lg tracking-widest bg-background/50 focus:bg-background transition-all font-mono shadow-inner border-border/50 text-transparent caret-transparent"
                                     />
-                                    <AnimatedMirrorInput value={code} placeholder={typingPlaceholder} />
+                                    <AnimatedMirrorInput value={code} placeholder={typingPlaceholder} isFocused={isFocused} />
                                 </motion.div>
 
                                 <motion.div 
