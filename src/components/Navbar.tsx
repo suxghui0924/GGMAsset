@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Sun, Moon } from "lucide-react"
+import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder"
 
 interface NavbarProps {
     searchQuery: string
@@ -13,6 +14,8 @@ interface NavbarProps {
 }
 
 export function Navbar({ searchQuery, onSearchChange, isAdmin, theme, onThemeToggle, onOpenAdmin }: NavbarProps) {
+    const typingPlaceholder = useTypingPlaceholder("에셋 검색...", 150, 3000)
+
     return (
         <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
             <div className="container flex h-16 items-center justify-between mx-auto px-4 max-w-[1400px]">
@@ -26,7 +29,7 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, theme, onThemeTog
                     <div className="relative">
                         <Input
                             type="text"
-                            placeholder="에셋 검색..."
+                            placeholder={typingPlaceholder}
                             className="w-full pr-10 bg-muted/20 focus:bg-background transition-all"
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}

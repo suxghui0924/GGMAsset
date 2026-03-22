@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AdminPanel } from "./AdminPanel"
 import { Sun, Moon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useTypingPlaceholder } from "@/hooks/useTypingPlaceholder"
 
 const TypingText = ({ text }: { text: string }) => {
     return (
@@ -28,6 +29,48 @@ const TypingText = ({ text }: { text: string }) => {
     )
 }
 
+// 고성능 동적 입력 애니메이션을 위한 미러 컴포넌트
+const AnimatedMirrorInput = ({ value, placeholder }: { value: string, placeholder: string }) => {
+    return (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden px-3">
+            <AnimatePresence mode="popLayout">
+                {value.length === 0 ? (
+                    <motion.span
+                        key="placeholder"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.4 }}
+                        exit={{ opacity: 0 }}
+                        className="text-muted-foreground tracking-normal"
+                    >
+                        {placeholder}
+                    </motion.span>
+                ) : (
+                    <div className="flex items-center tracking-widest font-mono text-lg">
+                        {value.split("").map((char, index) => (
+                            <motion.span
+                                key={`${index}-${char}`}
+                                initial={{ opacity: 0, x: 15, filter: "blur(4px)" }}
+                                animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                                exit={{ opacity: 0, x: -15, filter: "blur(4px)" }}
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                className="inline-block"
+                            >
+                                •
+                            </motion.span>
+                        ))}
+                        <motion.span
+                            layoutId="cursor"
+                            animate={{ opacity: [0, 1, 0] }}
+                            transition={{ repeat: Infinity, duration: 0.6 }}
+                            className="w-[2px] h-[1.2em] bg-[#0078d4] ml-1"
+                        />
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
+
 interface LoginProps {
     onLoginSuccess: (isAdmin: boolean, key: string) => void
     theme?: "light" | "dark"
@@ -41,6 +84,8 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
     const [isAdminIp, setIsAdminIp] = useState(false)
     const [showAdmin, setShowAdmin] = useState(false)
     const [agreed, setAgreed] = useState(false)
+
+    const typingPlaceholder = useTypingPlaceholder("초대 코드를 입력하세요", 150, 3000)
 
     // 입력 중인 코드가 관리자 키 규격인지 실시간 감지 (백도어 트리거)
     const isShadowKey = code.trim().startsWith("GGM-ADMIN-")
@@ -132,14 +177,16 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
                                     initial={{ x: -20, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
                                     transition={{ delay: 0.3 }}
+                                    className="relative"
                                 >
                                     <Input
                                         type="password"
-                                        placeholder="초대 코드를 입력하세요"
+                                        placeholder=""
                                         value={code}
                                         onChange={e => setCode(e.target.value)}
-                                        className="h-12 text-center text-lg tracking-widest placeholder:tracking-normal bg-background/50 focus:bg-background transition-all font-mono shadow-inner border-border/50"
+                                        className="h-12 text-center text-lg tracking-widest bg-background/50 focus:bg-background transition-all font-mono shadow-inner border-border/50 text-transparent caret-transparent"
                                     />
+                                    <AnimatedMirrorInput value={code} placeholder={typingPlaceholder} />
                                 </motion.div>
 
                                 <motion.div 
