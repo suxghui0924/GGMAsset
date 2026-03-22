@@ -201,6 +201,11 @@ export function Login({ onLoginSuccess, theme, onThemeToggle }: LoginProps) {
                                         onChange={e => setCode(e.target.value)}
                                         onFocus={() => setIsFocused(true)}
                                         onBlur={() => setIsFocused(false)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                (e.target as HTMLInputElement).blur()
+                                            }
+                                        }}
                                         className="h-12 text-center text-lg tracking-widest bg-background/50 focus:bg-background transition-all font-mono shadow-inner border-border/50 text-transparent caret-transparent"
                                     />
                                     <AnimatedMirrorInput value={code} placeholder={typingPlaceholder} isFocused={isFocused} />

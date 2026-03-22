@@ -91,6 +91,11 @@ export function Navbar({ searchQuery, onSearchChange, isAdmin, theme, onThemeTog
                             onChange={(e) => onSearchChange(e.target.value)}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    (e.target as HTMLInputElement).blur()
+                                }
+                            }}
                         />
                         <AnimatedMirrorInput value={searchQuery} placeholder={typingPlaceholder} isFocused={isFocused} />
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within/search:text-[#0078d4] transition-colors" />

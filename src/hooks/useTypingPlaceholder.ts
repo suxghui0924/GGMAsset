@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react"
 
-export function useTypingPlaceholder(fullText: string, speed: number = 100, delay: number = 2000) {
+export function useTypingPlaceholder(fullText: string, speed: number = 100, delay: number = 2000, maxLoops: number = 2) {
     const [placeholder, setPlaceholder] = useState("")
     const [isDeleting, setIsDeleting] = useState(false)
     const [loopNum, setLoopNum] = useState(0)
+    const [isStopped, setIsStopped] = useState(false)
 
     useEffect(() => {
+        if (isStopped) return
+
         let timer: ReturnType<typeof setTimeout>
 
         const handleTyping = () => {
@@ -16,6 +19,10 @@ export function useTypingPlaceholder(fullText: string, speed: number = 100, dela
                 setPlaceholder(currentText.substring(0, placeholder.length + 1))
                 
                 if (placeholder.length + 1 === currentText.length) {
+                    if (loopNum >= maxLoops - 1) {
+                        setIsStopped(true)
+                        return
+                    }
                     timer = setTimeout(() => setIsDeleting(true), delay)
                     return
                 }
@@ -35,7 +42,7 @@ export function useTypingPlaceholder(fullText: string, speed: number = 100, dela
         timer = setTimeout(handleTyping, speed)
 
         return () => clearTimeout(timer)
-    }, [placeholder, isDeleting, fullText, speed, delay, loopNum])
+    }, [placeholder, isDeleting, fullText, speed, delay, loopNum, isStopped, maxLoops])
 
-    return placeholder
+    return isStopped ? fullText : placeholder
 }
