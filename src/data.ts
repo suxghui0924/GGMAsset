@@ -354,7 +354,7 @@ export const assets = assetList.map((item, index) => {
     if (lowerTitle.includes('3d')) tags.push('3D 모델');
     if (lowerTitle.includes('pixel')) tags.push('픽셀 아트');
     if (lowerTitle.includes('vfx') || lowerTitle.includes('fx') || lowerTitle.includes('effect')) tags.push('VFX 효과');
-    if (lowerTitle.includes('ui') || lowerTitle.includes('gui')) tags.push('UI/인터페이스');
+    if (lowerTitle.includes('ui') || lowerTitle.includes('gui') || lowerTitle.includes('icons')) tags.push('UI/인터페이스');
 
     if (tags.length === 0) tags.push('기타 에셋');
 
