@@ -215,7 +215,7 @@ export function AdminPanel({ adminKey = "", onClose }: { adminKey?: string, onCl
                                         <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => {
                                             setSelectedCodes(new Set([c.code]));
                                             setTimeout(handleBulkDelete, 50); // 선택 후 바로 다중삭제 함수 호출로 단일 삭제 우회
-                                        }}>파기</Button>
+                                        }}>삭제</Button>
                                     </td>
                                 </tr>
                             ))}
